@@ -121,17 +121,17 @@
     #user-menu-toggle { background: rgba(255, 255, 255, 0.1); color: var(--color-white); padding: 8px; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); cursor: pointer; transition: var(--transition); }
     #user-menu-toggle:hover, #user-menu-toggle.open { background: rgba(255, 255, 255, 0.2); }
     #user-menu-toggle .fa-user-circle { font-size: 20px; }
-    #user-menu-dropdown { position: absolute; top: calc(100% + 12px); right: 0; background: var(--color-surface); color: var(--color-text); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 240px; overflow: hidden; transition: opacity 0.2s ease, transform 0.2s ease; transform-origin: top right; opacity: 0; transform: scale(0.95) translateY(-10px); pointer-events: none; display: block; }
+    #user-menu-dropdown { position: absolute; top: calc(100% + 12px); right: 0; background: var(--color-surface); color: var(--color-text); border-radius: var(--border-radius); box-shadow: var(--shadow-lg); width: 240px; overflow: hidden; transition: opacity 0.2s ease, transform 0.2s ease; transform-origin: top right; opacity: 0; transform: scale(0.95) translateY(-10px); pointer-events: none; display: block; padding: 8px; }
     #user-menu-dropdown.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-    .user-menu-header { padding: 16px; background-color: var(--color-bg); }
+    .user-menu-header { padding: 16px; background-color: var(--color-bg); margin: -8px -8px 8px -8px; border-radius: var(--border-radius) var(--border-radius) 0 0; }
     .user-menu-header p { margin: 0; line-height: 1.3; }
     .user-menu-header p strong { font-size: 12px; color: var(--color-text-light); }
     #userMenuUsername { font-weight: 600; color: var(--color-primary-dark); font-size: 16px; word-break: break-all; }
-    .user-menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font-size: 14px; color: var(--color-text-light); cursor: pointer; transition: background-color 0.2s ease; }
+    .user-menu-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; font-size: 14px; color: var(--color-text-light); cursor: pointer; transition: background-color 0.2s ease; border-radius: var(--border-radius); }
     .user-menu-item.is-action:hover { background-color: var(--color-bg); }
     #logoutBtn { color: var(--color-danger); font-weight: 500; }
     #logoutBtn:hover { background-color: color-mix(in srgb, var(--color-danger) 10%, transparent); }
-    #user-menu-dropdown hr { border: none; border-top: 1px solid var(--color-border); margin: 0; }
+    #user-menu-dropdown hr { border: none; border-top: 1px solid var(--color-border); margin: 8px -8px; }
     .theme-selector-container { padding: 8px 16px; }
     .theme-selector-container p { font-size: 12px; color: var(--color-text-light); margin-bottom: 8px; }
     .theme-buttons { display: flex; justify-content: space-around; gap: 10px; }
@@ -165,7 +165,7 @@
     #ai-analysis-card { background: linear-gradient(135deg, #f3e5f5, #e1bee7); border-left-color: var(--color-ai); padding: 20px; margin-top: 20px; border-radius: var(--border-radius); display: none; }
     #ai-analysis-card h3 { color: var(--color-ai); } #ai-analysis-card p { white-space: pre-wrap; }
     #harvestPlanTable { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-    #harvestPlanTable th, #harvestPlanTable td { padding: 10px; text-align: left; border-bottom: 1px solid var(--color-border); }
+    #harvestPlanTable th, #harvestPlanTable td { padding: 10px; text-align: left; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
     #harvestPlanTable th { background-color: var(--color-bg); font-weight: 600; }
     #harvestPlanTable tbody tr { cursor: grab; }
     #harvestPlanTable tbody tr:active { cursor: grabbing; background: var(--color-primary-light); }
@@ -1075,13 +1075,13 @@
                 const userToDelete = App.state.users.find(u => u.id == userId);
                 if (!userToDelete) return;
                 
-                if (confirm(`Tem a certeza que deseja EXCLUIR PERMANENTEMENTE o utilizador ${userToDelete.username}? Esta ação não pode ser desfeita.`)) {
+                App.ui.showConfirmationModal(`Tem a certeza que deseja EXCLUIR PERMANENTEMENTE o utilizador ${userToDelete.username}? Esta ação não pode ser desfeita.`, () => {
                     App.state.users = App.state.users.filter(u => u.id != userId);
-                    App.data.saveUsers(); 
+                    App.data.saveUsers();
                     App.ui.renderUsersList();
                     App.ui.closeUserEditModal();
                     App.ui.showAlert(`Utilizador ${userToDelete.username} excluído.`, 'success');
-                }
+                });
             },
             toggleUserStatus(userId) {
                 const user = App.state.users.find(u => u.id == userId); 
@@ -1095,10 +1095,10 @@
                 const user = App.state.users.find(u => u.id == userId);
                 if (!user) return;
                 const newPassword = 'novaSenha123';
-                if (confirm(`Deseja redefinir a senha de ${user.username} para "${newPassword}"?`)) {
+                App.ui.showConfirmationModal(`Deseja redefinir a senha de ${user.username} para "${newPassword}"?`, () => {
                     user.password = this._hashPassword(newPassword); App.data.saveUsers();
                     App.ui.showAlert(`Senha de ${user.username} foi redefinida.`, 'warning');
-                }
+                });
             },
             saveUserChanges(userId) {
                 const user = App.state.users.find(u => u.id == userId);
@@ -1199,6 +1199,7 @@
             showLoginMessage(message) { App.elements.loginMessage.textContent = message; },
             showAlert(message, type = 'success', duration = 3000) {
                 const { alertContainer } = App.elements;
+                if (!alertContainer) return;
                 const icons = { success: 'check-circle', error: 'exclamation-circle', warning: 'info-circle', info: 'info-circle' };
                 alertContainer.innerHTML = `<i class="fas fa-${icons[type] || 'info-circle'}"></i> ${message}`;
                 alertContainer.className = `show ${type}`;
@@ -1763,6 +1764,9 @@
                     btn.classList.toggle('active', btn.id === theme);
                 });
                 App.data.save(App.config.themeKey, theme);
+                if (App.state.currentUser) {
+                    setTimeout(() => App.charts.renderAll(), 50);
+                }
             },
             enableEnterKeyNavigation(formSelector) {
                 const form = document.querySelector(formSelector);
@@ -1901,7 +1905,6 @@
                 App.elements.harvest.tableBody.addEventListener('dragover', e => { e.preventDefault(); return false; });
                 App.elements.harvest.tableBody.addEventListener('drop', e => { e.stopPropagation(); if (dragSrcEl !== e.target) { const targetRow = e.target.closest('tr'); if(targetRow) App.actions.reorderHarvestSequence(dragSrcEl.dataset.id, targetRow.dataset.id); } return false; });
                 
-                // --- CORREÇÃO: Adicionar listeners para os campos de lançamento ---
                 App.elements.broca.codigo.addEventListener('input', () => App.ui.updateFazendaNome(App.elements.broca.codigo, App.elements.broca.fazendaNome));
                 App.elements.broca.talhao.addEventListener('input', () => App.actions.findVarietyForTalhao('broca'));
                 ['brocaBase', 'brocaMeio', 'brocaTopo', 'entrenos'].forEach(id => {
@@ -1917,7 +1920,6 @@
                 ['canaInteira', 'tolete', 'toco', 'ponta', 'estilhaco', 'pedaco'].forEach(id => {
                     document.getElementById(id).addEventListener('input', () => App.ui.calculatePerda());
                 });
-                // --- FIM DA CORREÇÃO ---
                 
                 App.elements.broca.btnSalvar.addEventListener('click', () => App.actions.saveBrocamento());
                 App.elements.perda.btnSalvar.addEventListener('click', () => App.actions.savePerda());
@@ -2074,10 +2076,13 @@
             },
             deleteTalhao(talhaoId) {
                 const farm = App.state.fazendas.find(f => f.code === App.elements.cadastros.farmSelect.value);
-                if (farm && confirm("Tem a certeza que deseja excluir este talhão?")) {
-                    farm.talhoes = farm.talhoes.filter(t => t.id != talhaoId);
-                    App.data.saveFazendas();
-                    App.ui.renderTalhaoList(farm.code);
+                if (farm) {
+                    App.ui.showConfirmationModal("Tem a certeza que deseja excluir este talhão?", () => {
+                        farm.talhoes = farm.talhoes.filter(t => t.id != talhaoId);
+                        App.data.saveFazendas();
+                        App.ui.renderTalhaoList(farm.code);
+                        App.ui.showAlert('Talhão excluído com sucesso.', 'info');
+                    });
                 }
             },
             savePersonnel() {
@@ -2118,12 +2123,13 @@
                 }
             },
             deletePersonnel(personnelId) {
-                if (confirm("Tem certeza que deseja excluir esta pessoa?")) {
+                App.ui.showConfirmationModal("Tem certeza que deseja excluir esta pessoa?", () => {
                     App.state.personnel = App.state.personnel.filter(p => p.id != personnelId);
                     App.data.savePersonnel();
                     App.ui.renderPersonnelList();
                     App.ui.populateOperatorSelects();
-                }
+                    App.ui.showAlert('Pessoa excluída com sucesso.', 'info');
+                });
             },
             handleLogoUpload(e) {
                 const file = e.target.files[0];
@@ -2139,12 +2145,12 @@
                 reader.readAsDataURL(file);
             },
             removeLogo() {
-                if (confirm("Tem certeza que deseja remover o logotipo?")) {
+                App.ui.showConfirmationModal("Tem certeza que deseja remover o logotipo?", () => {
                     App.state.companyLogo = null;
                     App.data.saveLogo();
                     App.ui.renderLogoPreview();
                     App.elements.companyConfig.logoInput.value = '';
-                }
+                });
             },
             agendarInspecao() {
                 const els = App.elements.planejamento;
@@ -2159,9 +2165,9 @@
                 if (plano) { plano.status = 'Concluído'; App.data.savePlanos(); App.ui.renderPlanejamento(); App.ui.showAlert("Inspeção marcada como concluída!", "success"); }
             },
             excluirPlano(id) {
-                if(confirm("Tem a certeza que deseja excluir este planeamento?")) {
+                App.ui.showConfirmationModal("Tem a certeza que deseja excluir este planeamento?", () => {
                     App.state.planos = App.state.planos.filter(p => p.id != id); App.data.savePlanos(); App.ui.renderPlanejamento(); App.ui.showAlert("Planeamento excluído.", "info");
-                }
+                });
             },
             verificarEAtualizarPlano(tipo, fazendaCodigo, talhao) {
                 const planoPendente = App.state.planos.find(p => p.status === 'Pendente' && p.tipo === tipo && p.fazendaCodigo === fazendaCodigo && p.talhao.toLowerCase() === talhao.toLowerCase());
@@ -2255,12 +2261,12 @@
                 App.ui.showHarvestPlanList();
             },
             deleteHarvestPlan(planId) {
-                    if (confirm("Tem a certeza que deseja excluir este plano de colheita? Esta ação é irreversível.")) {
-                            App.state.harvestPlans = App.state.harvestPlans.filter(p => p.id != planId);
-                            App.data.saveHarvestPlans();
-                            App.ui.renderHarvestPlansList();
-                            App.ui.showAlert('Plano de colheita excluído.', 'info');
-                        }
+                App.ui.showConfirmationModal("Tem a certeza que deseja excluir este plano de colheita? Esta ação é irreversível.", () => {
+                    App.state.harvestPlans = App.state.harvestPlans.filter(p => p.id != planId);
+                    App.data.saveHarvestPlans();
+                    App.ui.renderHarvestPlansList();
+                    App.ui.showAlert('Plano de colheita excluído.', 'info');
+                });
             },
             addOrUpdateHarvestSequence() {
                 if (!App.state.activeHarvestPlan) {
@@ -2483,11 +2489,11 @@
                 });
             },
             deleteEntry(type, index) {
-                if (confirm('Tem a certeza que deseja excluir este registo?')) {
+                App.ui.showConfirmationModal('Tem a certeza que deseja excluir este registo?', () => {
                     if (type === 'brocamento') { App.state.registros.splice(index, 1); App.data.saveRegistros(); }
                     else if (type === 'perda') { App.state.perdas.splice(index, 1); App.data.savePerdas(); }
                     App.ui.showAlert('Registo excluído com sucesso!'); App.ui.renderExclusao(); App.charts.renderAll();
-                }
+                });
             },
             importFarmsFromCSV(file) {
                 if (!file) return;
@@ -2669,8 +2675,18 @@
 
         charts: {
             renderAll() { this.renderBrocamentoCharts(); this.renderPerdaCharts(); },
+            _getThemeColors() {
+                const styles = getComputedStyle(document.documentElement);
+                return {
+                    primary: styles.getPropertyValue('--color-primary').trim(),
+                    primaryDark: styles.getPropertyValue('--color-primary-dark').trim(),
+                    accent: styles.getPropertyValue('--color-accent').trim(),
+                    text: styles.getPropertyValue('--color-text').trim()
+                };
+            },
             _createOrUpdateChart(id, config) { const ctx = document.getElementById(id)?.getContext('2d'); if(!ctx) return; if (App.state.charts[id]) { App.state.charts[id].destroy(); } App.state.charts[id] = new Chart(ctx, config); },
             renderBrocamentoCharts() {
+                const themeColors = this._getThemeColors();
                 const dadosPorFazenda = App.state.registros.reduce((acc, reg) => { 
                     const fazendaKey = `${reg.codigo} - ${reg.fazenda}`;
                     acc[fazendaKey] = acc[fazendaKey] || []; 
@@ -2679,13 +2695,14 @@
                 }, {});
                 const labels = Object.keys(dadosPorFazenda).sort((a,b) => parseInt(a) - parseInt(b)); 
                 const medias = labels.map(f => (dadosPorFazenda[f].reduce((a,b)=>a+b,0) / dadosPorFazenda[f].length).toFixed(2));
-                this._createOrUpdateChart('graficoBrocamento', { type: 'bar', data: { labels, datasets: [{ label: 'Média de Brocamento (%)', data: medias, backgroundColor: 'var(--color-accent)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
-                this._createOrUpdateChart('graficoBrocamentoPizza', { type: 'pie', data: { labels, datasets: [{ data: medias, backgroundColor: ['#4caf50', '#2e7d32', '#388e3c', '#66bb6a', '#81c784'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { datalabels: { formatter: (v) => v + '%', color: '#fff' } } }, plugins: [ChartDataLabels] });
+                this._createOrUpdateChart('graficoBrocamento', { type: 'bar', data: { labels, datasets: [{ label: 'Média de Brocamento (%)', data: medias, backgroundColor: themeColors.accent }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: themeColors.text } }, x: { ticks: { color: themeColors.text } } }, plugins: { legend: { labels: { color: themeColors.text } } } } });
+                this._createOrUpdateChart('graficoBrocamentoPizza', { type: 'pie', data: { labels, datasets: [{ data: medias, backgroundColor: ['#4caf50', '#2e7d32', '#388e3c', '#66bb6a', '#81c784'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: themeColors.text } }, datalabels: { formatter: (v) => v + '%', color: '#fff' } } }, plugins: [ChartDataLabels] });
                 const dadosPorData = App.state.registros.reduce((acc, reg) => { acc[reg.data] = acc[reg.data] || []; acc[reg.data].push(parseFloat(reg.brocamento.replace(',', '.'))); return acc; }, {});
                 const datas = Object.keys(dadosPorData).sort(); const mediasPorData = datas.map(d => (dadosPorData[d].reduce((a,b)=>a+b,0) / dadosPorData[d].length).toFixed(2));
-                this._createOrUpdateChart('graficoBrocamentoLinha', { type: 'line', data: { labels: datas, datasets: [{ label: 'Evolução do Brocamento (%)', data: mediasPorData, borderColor: 'var(--color-accent)', tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+                this._createOrUpdateChart('graficoBrocamentoLinha', { type: 'line', data: { labels: datas, datasets: [{ label: 'Evolução do Brocamento (%)', data: mediasPorData, borderColor: themeColors.accent, tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: themeColors.text } }, x: { ticks: { color: themeColors.text } } }, plugins: { legend: { labels: { color: themeColors.text } } } } });
             },
             renderPerdaCharts() {
+                const themeColors = this._getThemeColors();
                 const dadosPorFazenda = App.state.perdas.reduce((acc, p) => { 
                     const fazendaKey = `${p.codigo} - ${p.fazenda}`;
                     acc[fazendaKey] = acc[fazendaKey] || []; 
@@ -2694,13 +2711,13 @@
                 }, {});
                 const labels = Object.keys(dadosPorFazenda).sort((a,b) => parseInt(a) - parseInt(b)); 
                 const medias = labels.map(f => (dadosPorFazenda[f].reduce((a,b)=>a+b,0) / dadosPorFazenda[f].length).toFixed(2));
-                this._createOrUpdateChart('graficoPerda', { type: 'bar', data: { labels, datasets: [{ label: 'Média de Perda (Total)', data: medias, backgroundColor: 'var(--color-primary-dark)' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+                this._createOrUpdateChart('graficoPerda', { type: 'bar', data: { labels, datasets: [{ label: 'Média de Perda (Total)', data: medias, backgroundColor: themeColors.primaryDark }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: themeColors.text } }, x: { ticks: { color: themeColors.text } } }, plugins: { legend: { labels: { color: themeColors.text } } } } });
                 const tiposPerda = ['canaInteira', 'tolete', 'toco', 'ponta', 'estilhaco', 'pedaco']; const labelsPerda = ['Cana Inteira', 'Tolete', 'Toco', 'Ponta', 'Estilhaço', 'Pedaço'];
                 const dadosPerda = tiposPerda.map(tipo => App.state.perdas.reduce((sum, p) => sum + p[tipo], 0));
-                this._createOrUpdateChart('graficoPerdaRadar', { type: 'radar', data: { labels: labelsPerda, datasets: [{ label: 'Total por Tipo de Perda', data: dadosPerda, backgroundColor: 'color-mix(in srgb, var(--color-primary-dark) 20%, transparent)', borderColor: 'var(--color-primary-dark)' }] }, options: { responsive: true, maintainAspectRatio: false } });
+                this._createOrUpdateChart('graficoPerdaRadar', { type: 'radar', data: { labels: labelsPerda, datasets: [{ label: 'Total por Tipo de Perda', data: dadosPerda, backgroundColor: 'color-mix(in srgb, var(--color-primary-dark) 20%, transparent)', borderColor: themeColors.primaryDark, pointBackgroundColor: themeColors.primaryDark, pointBorderColor: '#fff', pointHoverBackgroundColor: '#fff', pointHoverBorderColor: themeColors.primaryDark }] }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { pointLabels: { color: themeColors.text }, grid: { color: themeColors.border }, angleLines: { color: themeColors.border } } }, plugins: { legend: { labels: { color: themeColors.text } } } } });
                 const dadosPorData = App.state.perdas.reduce((acc, p) => { acc[p.data] = acc[p.data] || []; acc[p.data].push(p.total); return acc; }, {});
                 const datas = Object.keys(dadosPorData).sort(); const mediasPorData = datas.map(d => (dadosPorData[d].reduce((a,b)=>a+b,0) / dadosPorData[d].length).toFixed(2));
-                this._createOrUpdateChart('graficoPerdaLinha', { type: 'line', data: { labels: datas, datasets: [{ label: 'Evolução da Perda (Total)', data: mediasPorData, borderColor: 'var(--color-primary-dark)', tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+                this._createOrUpdateChart('graficoPerdaLinha', { type: 'line', data: { labels: datas, datasets: [{ label: 'Evolução da Perda (Total)', data: mediasPorData, borderColor: themeColors.primaryDark, tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { color: themeColors.text } }, x: { ticks: { color: themeColors.text } } }, plugins: { legend: { labels: { color: themeColors.text } } } } });
             }
         },
 
