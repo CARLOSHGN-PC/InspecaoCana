@@ -1,1703 +1,352 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Inspeção de Cana</title>
-  <style>
-    :root {
-      --color-primary: #2d6a4f;
-      --color-accent: #40916c;
-      --color-bg: #f8f9fa;
-      --color-text: #212529;
-      --color-white: #fff;
-      --color-border: #ccc;
-      --color-danger: #dc3545;
-      --shadow: rgba(0, 0, 0, 0.15);
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: var(--font-family);
-      background-color: var(--color-bg);
-      color: var(--color-text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Tela de login */
-    #loginScreen {
-      flex: 1;
-      background-color: var(--color-bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #loginBox {
-      background: var(--color-white);
-      box-shadow: 0 4px 15px var(--shadow);
-      border-radius: 20px;
-      padding: 30px 40px;
-      width: 320px;
-      text-align: center;
-    }
-    #loginBox h2 {
-      margin-bottom: 20px;
-      color: var(--color-primary);
-      letter-spacing: 4px;
-      font-weight: 700;
-    }
-    #loginBox input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 15px;
-      border: 1px solid var(--color-border);
-      font-size: 16px;
-      outline: none;
-      transition: border-color 0.3s ease;
-    }
-    #loginBox input:focus {
-      border-color: var(--color-accent);
-      box-shadow: 0 0 8px var(--color-accent);
-    }
-    #loginBox button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 14px;
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      border: none;
-      border-radius: 15px;
-      font-weight: 700;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    #loginBox button:hover {
-      background-color: var(--color-primary);
-    }
-    #loginMessage {
-      color: var(--color-danger);
-      min-height: 20px;
-      margin-top: 10px;
-    }
-
-    /* Header fixo */
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 60px;
-      background: var(--color-primary);
-      color: var(--color-white);
-      display: flex;
-      align-items: center;
-      padding: 0 20px;
-      box-shadow: 0 3px 8px var(--shadow);
-      z-index: 1000;
-      user-select: none;
-      justify-content: space-between;
-    }
-
-    header h1 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 22px;
-      flex-grow: 1;
-      text-align: center;
-    }
-
-    /* Botão hamburger */
-    .menu-toggle {
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      width: 50px;
-      height: 40px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-around;
-      padding: 6px 8px;
-      z-index: 1100;
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-      user-select: none;
-    }
-
-    .menu-toggle div {
-      height: 5px;
-      background: #333;
-      border-radius: 3px;
-    }
-
-    /* Menu lateral */
-    nav.menu {
-      position: fixed;
-      top: 60px;
-      left: 0;
-      bottom: 0;
-      width: 240px;
-      background: var(--color-white);
-      border-right: 1px solid var(--color-border);
-      box-shadow: 3px 0 10px var(--shadow);
-      overflow-y: auto;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      z-index: 999;
-      border-top-right-radius: 20px;
-      border-bottom-right-radius: 20px;
-    }
-
-    nav.menu.open {
-      transform: translateX(0);
-    }
-
-    /* Ícones do menu 70x70 */
-    .menu-icon {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid var(--color-accent);
-      box-shadow: 0 2px 6px rgba(64,145,108,0.4);
-      user-select: none;
-      margin-right: 10px;
-    }
-
-    .menu-btn, .excluir-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 100%;
-      padding: 18px 15px 22px;
-      background: none;
-      border: none;
-      font-weight: 700;
-      color: var(--color-text);
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      font-size: 16px;
-      position: relative;
-      user-select: none;
-      transition: background-color 0.3s ease;
-      border-radius: 0;
-      text-align: left;
-    }
-
-    .menu-btn:hover, .excluir-btn:hover {
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      border-radius: 20px;
-    }
-
-    .menu-btn.active, .excluir-btn.active {
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      border-radius: 20px;
-    }
-
-    .menu-btn .arrow {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%) rotate(0deg);
-      transition: transform 0.3s ease;
-      font-size: 16px;
-    }
-
-    .menu-btn.active .arrow {
-      transform: translateY(-50%) rotate(90deg);
-    }
-
-    /* Submenu */
-    nav.submenu {
-      position: fixed;
-      top: 60px;
-      left: 240px;
-      width: 220px;
-      bottom: 0;
-      background: var(--color-white);
-      border-left: 1px solid var(--color-border);
-      box-shadow: -3px 0 10px var(--shadow);
-      overflow-y: auto;
-      display: none;
-      z-index: 998;
-      border-top-left-radius: 20px;
-      border-bottom-left-radius: 20px;
-    }
-
-    nav.submenu.open {
-      display: block;
-    }
-
-    nav.submenu button {
-      width: 100%;
-      padding: 16px 20px;
-      background: none;
-      border: none;
-      text-align: left;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: 600;
-      border-bottom: 1px solid #eee;
-      color: var(--color-text);
-      transition: background-color 0.3s ease;
-      border-radius: 0;
-    }
-
-    nav.submenu button:hover {
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      border-radius: 20px;
-    }
-
-    /* Conteúdo principal */
-    main.content {
-      margin-top: 60px;
-      padding: 28px 35px;
-      transition: margin-left 0.3s ease;
-      min-height: calc(100vh - 60px);
-    }
-
-    main.content.menu-open {
-      margin-left: 460px;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .card {
-      background: var(--color-white);
-      padding: 30px 30px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      font-size: 17px;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    label {
-      display: block;
-      margin-top: 20px;
-      font-weight: 700;
-      color: var(--color-primary);
-      font-size: 15px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 14px;
-      margin-top: 8px;
-      border-radius: 10px;
-      border: 1px solid var(--color-border);
-      font-size: 16px;
-      transition: box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-
-    input:focus, select:focus {
-      border-color: var(--color-accent);
-      box-shadow: 0 0 8px var(--color-accent);
-      outline: none;
-    }
-
-    button.save {
-      margin-top: 32px;
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      border: none;
-      padding: 18px;
-      border-radius: 12px;
-      font-size: 20px;
-      font-weight: 800;
-      cursor: pointer;
-      box-shadow: 0 7px 20px rgba(64,145,108,0.5);
-      transition: background-color 0.3s ease;
-    }
-
-    button.save:hover {
-      background-color: var(--color-primary);
-      box-shadow: 0 9px 25px rgba(45,106,79,0.7);
-    }
-
-    .resultado {
-      margin-top: 30px;
-      font-weight: 700;
-      color: var(--color-primary);
-      font-size: 21px;
-    }
-
-    .botoes-relatorio {
-      margin-top: 38px;
-      display: flex;
-      gap: 20px;
-    }
-
-    .botoes-relatorio button {
-      flex: 1;
-      padding: 18px;
-      font-weight: 800;
-      font-size: 18px;
-      border: none;
-      border-radius: 12px;
-      background-color: var(--color-accent);
-      color: var(--color-white);
-      cursor: pointer;
-      box-shadow: 0 7px 20px rgba(64,145,108,0.55);
-      transition: background-color 0.3s ease;
-    }
-
-    .botoes-relatorio button:hover {
-      background-color: var(--color-primary);
-      box-shadow: 0 9px 28px rgba(45,106,79,0.8);
-    }
-
-    .btn-excluir {
-      padding: 5px 14px;
-      margin-left: 10px;
-      border-radius: 8px;
-      border: none;
-      background-color: var(--color-danger);
-      color: var(--color-white);
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 15px;
-      transition: background-color 0.3s ease;
-    }
-
-    .btn-excluir:hover {
-      background-color: #a71d2a;
-    }
-
-    /* Alert styles */
-    #alertContainer {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background-color: rgba(34, 139, 34, 0.9);
-      color: #fff;
-      padding: 14px 22px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 16px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      transform: translateY(-20px);
-      z-index: 1500;
-    }
-
-    #alertContainer.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    /* Logout topo direito */
-    #logoutInfo {
-      position: fixed;
-      top: 10px;
-      right: 20px;
-      background: var(--color-primary);
-      color: var(--color-white);
-      padding: 8px 15px;
-      border-radius: 12px;
-      font-weight: 600;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 14px;
-      z-index: 1200;
-    }
-    #logoutBtn {
-      background: #b41a1a;
-      border: none;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-weight: 700;
-      transition: background-color 0.3s ease;
-    }
-    #logoutBtn:hover {
-      background: #d63030;
-    }
-
-    /* Responsividade */
-    @media (max-width: 900px) {
-      nav.menu {
-        width: 200px;
-        border-radius: 0 20px 20px 0;
-      }
-
-      nav.submenu {
-        left: 200px;
-        width: 180px;
-        border-radius: 0 0 0 20px;
-      }
-
-      main.content.menu-open {
-        margin-left: 380px;
-      }
-    }
-
-    @media (max-width: 700px) {
-      nav.menu,
-      nav.submenu {
-        position: fixed;
-        top: 60px;
-        bottom: auto;
-        height: auto;
-        width: 100%;
-        max-height: 300px;
-        border-radius: 0;
-        box-shadow: 0 3px 15px var(--shadow);
-        overflow-y: auto;
-        transform: translateY(-100%);
-        transition: transform 0.3s ease;
-        left: 0 !important;
-      }
-
-      nav.menu.open,
-      nav.submenu.open {
-        transform: translateY(0);
-      }
-
-      main.content.menu-open {
-        margin-left: 0;
-        margin-top: 360px;
-      }
-
-      nav.submenu {
-        top: calc(60px + 300px);
-      }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Tela de login -->
-  <div id="loginScreen">
-    <div id="loginBox" role="main" aria-label="Tela de login">
-      <h2>BEM VINDO</h2>
-      <input id="loginUser" placeholder="Usuário" aria-label="Campo usuário" />
-      <input id="loginPass" type="password" placeholder="Senha" aria-label="Campo senha" />
-      <button id="btnLogin" aria-label="Botão de login">LOGIN</button>
-      <div id="loginMessage" role="alert" aria-live="assertive"></div>
-    </div>
-  </div>
-
-  <!-- App -->
-  <div id="appScreen" style="display:none; flex:1; flex-direction: column;">
-
-    <!-- Header -->
-    <header>
-      <button class="menu-toggle" id="btnToggleMenu" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu">
-        <div></div><div></div><div></div>
-      </button>
-      <h1>Inspeção de Cana</h1>
-    </header>
-
-    <!-- Logout topo direito -->
-    <div id="logoutInfo" style="display:none;" role="region" aria-live="polite">
-      <span id="userNameDisplay"></span>
-      <span id="currentDateTime"></span>
-      <button id="logoutBtn" aria-label="Botão sair do sistema">Sair</button>
-    </div>
-
-    <!-- Menu lateral -->
-    <nav class="menu" id="menu" aria-label="Menu Principal" tabindex="-1" hidden>
-      <!-- Menu será gerado via JS -->
-    </nav>
-
-    <!-- Submenus -->
-    <nav class="submenu" id="submenuBroca" aria-label="Submenu Broca" role="menu" aria-hidden="true" tabindex="-1">
-      <button role="menuitem" type="button" data-target="lancamentoBroca">Lançamento</button>
-      <button role="menuitem" type="button" data-target="relatorioBroca">Relatório</button>
-    </nav>
-
-    <nav class="submenu" id="submenuPerda" aria-label="Submenu Perda" role="menu" aria-hidden="true" tabindex="-1">
-      <button role="menuitem" type="button" data-target="lancamentoPerda">Lançamento</button>
-      <button role="menuitem" type="button" data-target="relatorioPerda">Relatório</button>
-    </nav>
-
-    <nav class="submenu" id="submenuUsuarios" aria-label="Submenu Usuários" role="menu" aria-hidden="true" tabindex="-1">
-      <button role="menuitem" type="button" data-target="gerenciarUsuarios">Gerenciar Usuários</button>
-    </nav>
-
-    <!-- Conteúdo principal -->
-    <main class="content" id="content">
-      <!-- Dashboard -->
-      <section id="dashboard" class="tab-content card" aria-label="Dashboard" tabindex="0" hidden>
-        <h2>Dashboard</h2>
-        <canvas id="graficoBrocamento" width="400" height="200"></canvas>
-        <canvas id="graficoPerda" width="400" height="200" style="margin-top: 40px;"></canvas>
-      </section>
-
-      <!-- Lançamento Broca -->
-      <section id="lancamentoBroca" class="tab-content card" aria-label="Lançamento Broca" tabindex="0" hidden>
-        <h2>Lançamento Broca</h2>
-        <label for="codigo">Código da Fazenda:</label>
-        <input type="number" id="codigo" aria-describedby="fazendaNome" />
-        <div id="fazendaNome" aria-live="polite" style="font-weight:bold; color: var(--color-primary); margin-top: 4px;"></div>
-
-        <label for="data">Data da Inspeção:</label>
-        <input type="date" id="data" />
-
-        <label for="talhao">Talhão:</label>
-        <input type="text" id="talhao" />
-
-        <label for="entrenos">Entrenós Contados:</label>
-        <input type="number" id="entrenos" min="0" />
-        <label for="brocado">Quantidade de Brocado:</label>
-        <input type="number" id="brocado" min="0" />
-
-        <div class="resultado" id="resultado"></div>
-
-        <button class="save" type="button" id="btnSalvarBrocamento">Salvar Inspeção</button>
-      </section>
-
-      <!-- Relatório Broca -->
-      <section id="relatorioBroca" class="tab-content card" aria-label="Relatório Broca" tabindex="0" hidden>
-        <h2>Relatório de Inspeção de Cana (Brocamento)</h2>
-        <label for="fazendaFiltroBrocamento">Filtrar por Fazenda:</label>
-        <select id="fazendaFiltroBrocamento">
-          <option value="">Todas</option>
-          <option value="4012">FAZ. LAGOA CERCADA</option>
-          <option value="4010">FAZ. PAULO MINEIRO</option>
-          <option value="4045">FAZ. MERINDO I</option>
-        </select>
-
-        <label for="inicioBrocamento">Data Início:</label>
-        <input type="date" id="inicioBrocamento" />
-
-        <label for="fimBrocamento">Data Fim:</label>
-        <input type="date" id="fimBrocamento" />
-
-        <div class="botoes-relatorio">
-          <button id="btnPDFBrocamento" type="button">Gerar Relatório (PDF)</button>
-          <button id="btnExcelBrocamento" type="button">Exportar para Excel</button>
-        </div>
-      </section>
-
-      <!-- Lançamento Perda -->
-      <section id="lancamentoPerda" class="tab-content card" aria-label="Lançamento Perda" tabindex="0" hidden>
-        <h2>Lançamento Perda</h2>
-        <label for="dataPerda">Data:</label>
-        <input type="date" id="dataPerda" />
-
-        <label for="codigoPerda">Código da Fazenda:</label>
-        <input type="number" id="codigoPerda" aria-describedby="fazendaNomePerda" />
-        <div id="fazendaNomePerda" aria-live="polite" style="font-weight:bold; color: var(--color-primary); margin-top: 4px;"></div>
-
-        <label for="talhaoPerda">Talhão:</label>
-        <input type="text" id="talhaoPerda" />
-
-        <label for="frenteServico">Frente de Serviço:</label>
-        <input type="text" id="frenteServico" />
-
-        <label for="turno">Turno:</label>
-        <select id="turno">
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
-
-        <label for="canaInteira">Cana Inteira:</label>
-        <input type="number" id="canaInteira" min="0" value="0" />
-
-        <label for="tolete">Tolete:</label>
-        <input type="number" id="tolete" min="0" value="0" />
-
-        <label for="toco">Toco:</label>
-        <input type="number" id="toco" min="0" value="0" />
-
-        <label for="ponta">Ponta:</label>
-        <input type="number" id="ponta" min="0" value="0" />
-
-        <label for="estilhaco">Estilhaço:</label>
-        <input type="number" id="estilhaco" min="0" value="0" />
-
-        <label for="pedaco">Pedaço:</label>
-        <input type="number" id="pedaco" min="0" value="0" />
-
-        <div class="resultado" id="resultadoPerda"></div>
-
-        <button class="save" type="button" id="btnSalvarPerda">Salvar Perda de Cana</button>
-      </section>
-
-      <!-- Relatório Perda -->
-      <section id="relatorioPerda" class="tab-content card" aria-label="Relatório Perda" tabindex="0" hidden>
-        <h2>Relatório de Perda de Cana</h2>
-        <label for="fazendaFiltroPerda">Filtrar por Fazenda:</label>
-        <select id="fazendaFiltroPerda">
-          <option value="">Todas</option>
-          <option value="4012">FAZ. LAGOA CERCADA</option>
-          <option value="4010">FAZ. PAULO MINEIRO</option>
-          <option value="4045">FAZ. MERINDO I</option>
-        </select>
-
-        <label for="talhaoFiltroPerda">Filtrar por Talhão:</label>
-        <input type="text" id="talhaoFiltroPerda" placeholder="Digite Talhão" />
-
-        <label for="turnoFiltroPerda">Filtrar por Turno:</label>
-        <select id="turnoFiltroPerda">
-          <option value="">Todos</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
-
-        <label for="frenteFiltroPerda">Filtrar por Frente de Serviço:</label>
-        <input type="text" id="frenteFiltroPerda" placeholder="Digite Frente de Serviço" />
-
-        <label for="inicioPerda">Data Início:</label>
-        <input type="date" id="inicioPerda" />
-
-        <label for="fimPerda">Data Fim:</label>
-        <input type="date" id="fimPerda" />
-
-        <div class="botoes-relatorio">
-          <button id="btnPDFPerda" type="button">Gerar Relatório (PDF)</button>
-          <button id="btnExcelPerda" type="button">Exportar para Excel</button>
-        </div>
-      </section>
-
-      <!-- Exclusão -->
-      <section id="excluirDados" class="tab-content card" aria-label="Excluir Lançamentos" tabindex="0" hidden>
-        <h2>Excluir Lançamentos</h2>
-        <p>Selecione um lançamento para excluir:</p>
-        <div id="listaExclusao" tabindex="0"></div>
-      </section>
-
-      <!-- Gerenciar Usuários -->
-      <section id="gerenciarUsuarios" class="tab-content card" aria-label="Gerenciar Usuários" tabindex="0" hidden>
-        <h2>Gerenciar Usuários</h2>
-
-        <h3>Criar Novo Usuário</h3>
-        <label for="newUserUsername">Nome do Usuário:</label>
-        <input id="newUserUsername" type="text" placeholder="Nome do usuário" />
-
-        <label for="newUserPassword">Senha:</label>
-        <input id="newUserPassword" type="password" placeholder="Senha" />
-
-        <label for="newUserRole">Perfil:</label>
-        <select id="newUserRole">
-          <option value="user">Usuário</option>
-          <option value="admin">Administrador</option>
-        </select>
-
-        <fieldset style="margin-top: 20px;">
-          <legend>Permissões</legend>
-          <label><input type="checkbox" id="permDashboard" /> Acesso ao Dashboard</label><br />
-          <label><input type="checkbox" id="permLancamento" /> Permissão de Lançamento</label><br />
-          <label><input type="checkbox" id="permRelatorio" /> Permissão de Relatório</label><br />
-          <label><input type="checkbox" id="permExcluir" /> Permissão para Excluir</label><br />
-          <label><input type="checkbox" id="permGerenciarUsuarios" /> Permissão para Gerenciar Usuários</label>
-        </fieldset>
-
-        <button class="save" id="btnCreateUser">Criar Usuário</button>
-
-        <h3 style="margin-top: 30px;">Usuários Cadastrados</h3>
-        <div id="usersList" style="max-height: 250px; overflow-y: auto; margin-top: 10px;"></div>
-      </section>
-    </main>
-
-    <!-- Alertas -->
-    <div id="alertContainer" role="alert" aria-live="assertive"></div>
-  </div>
-
-  <!-- Scripts externos -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-
-  <script>
-    // --- Dados e variáveis ---
-
-    const fazendas = {
-      4012: "FAZ. LAGOA CERCADA",
-      4010: "FAZ. PAULO MINEIRO",
-      4045: "FAZ. MERINDO I"
-    };
-
-    // Usuários salvos no localStorage
-    let users = JSON.parse(localStorage.getItem('users')) || [];
-
-    // Se não existir admin, cria admin padrão
-    if(!users.some(u => u.username === 'admin')) {
-      users.push({
-        username: 'admin',
-        password: 'admin123', // Senha padrão
-        role: 'admin',
-        active: true,
-        permissions: {
-          dashboard: true,
-          lancamento: true,
-          relatorio: true,
-          excluir: true,
-          gerenciarUsuarios: true
-        }
-      });
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    // Registros Brocamento e Perdas
-    let registros = JSON.parse(localStorage.getItem('registros') || '[]');
-    let perdas = JSON.parse(localStorage.getItem('perdas') || '[]');
-
-    // Estado do usuário logado
-    let currentUser = null;
-
-    // Elementos DOM
-    const loginScreen = document.getElementById('loginScreen');
-    const loginUser = document.getElementById('loginUser');
-    const loginPass = document.getElementById('loginPass');
-    const btnLogin = document.getElementById('btnLogin');
-    const loginMessage = document.getElementById('loginMessage');
-
-    const appScreen = document.getElementById('appScreen');
-    const logoutInfo = document.getElementById('logoutInfo');
-    const userNameDisplay = document.getElementById('userNameDisplay');
-    const currentDateTime = document.getElementById('currentDateTime');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    const btnToggleMenu = document.getElementById('btnToggleMenu');
-    const menu = document.getElementById('menu');
-
-    const submenuBroca = document.getElementById('submenuBroca');
-    const submenuPerda = document.getElementById('submenuPerda');
-    const submenuUsuarios = document.getElementById('submenuUsuarios');
-
-    const content = document.getElementById('content');
-
-    // Inputs Gerenciar Usuários
-    const newUserUsername = document.getElementById('newUserUsername');
-    const newUserPassword = document.getElementById('newUserPassword');
-    const newUserRole = document.getElementById('newUserRole');
-    const permDashboard = document.getElementById('permDashboard');
-    const permLancamento = document.getElementById('permLancamento');
-    const permRelatorio = document.getElementById('permRelatorio');
-    const permExcluir = document.getElementById('permExcluir');
-    const permGerenciarUsuarios = document.getElementById('permGerenciarUsuarios');
-    const btnCreateUser = document.getElementById('btnCreateUser');
-    const usersList = document.getElementById('usersList');
-
-    // --- Funções auxiliares ---
-
-    function showAlert(message, type = 'success') {
-      const alert = document.getElementById('alertContainer');
-      alert.textContent = message;
-      alert.style.backgroundColor = type === 'error' ? 'rgba(220,53,69,0.9)' : 'rgba(34, 139, 34, 0.9)';
-      alert.classList.add('show');
-      setTimeout(() => alert.classList.remove('show'), 3000);
-    }
-
-    function formatDateTime() {
-      const now = new Date();
-      return now.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
-    }
-
-    // Atualiza hora no logout
-    function updateDateTime() {
-      if(currentUser) {
-        currentDateTime.textContent = formatDateTime();
-      }
-    }
-    setInterval(updateDateTime, 60000);
-
-    // Atualiza menu visível e itens conforme permissão
-    function renderMenu() {
-      menu.innerHTML = '';
-
-      const menuItems = [];
-
-      if(currentUser.permissions.dashboard) {
-        menuItems.push({
-          id: 'btnDashboard',
-          label: 'Dashboard',
-          icon: 'https://toppng.com/uploads/preview/dashboard-svg-icon-free-dashboard-icon-11553444664o1utwdkesz.png',
-          submenu: null
-        });
-      }
-
-      if(currentUser.permissions.lancamento) {
-        menuItems.push({
-          id: 'btnBroca',
-          label: 'Broca',
-          icon: 'https://img.freepik.com/vetores-premium/icone-da-broca-africana-da-cana-de-acucar_873668-332.jpg',
-          submenu: submenuBroca
-        });
-        menuItems.push({
-          id: 'btnPerda',
-          label: 'Perda',
-          icon: 'https://cdn-icons-png.flaticon.com/512/750/750896.png',
-          submenu: submenuPerda
-        });
-      }
-
-      if(currentUser.permissions.excluir) {
-        menuItems.push({
-          id: 'btnExcluirDados',
-          label: 'Excluir Dados',
-          icon: '', // sem ícone para excluir, só texto
-          submenu: null,
-          excluirBtn: true
-        });
-      }
-
-      if(currentUser.permissions.gerenciarUsuarios) {
-        menuItems.push({
-          id: 'btnGerenciarUsuarios',
-          label: 'Usuários',
-          icon: 'https://cdn-icons-png.flaticon.com/512/747/747376.png',
-          submenu: submenuUsuarios
-        });
-      }
-
-      menuItems.forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = item.excluirBtn ? 'excluir-btn' : 'menu-btn';
-        btn.id = item.id;
-        btn.type = 'button';
-        btn.setAttribute('aria-haspopup', item.submenu ? 'true' : 'false');
-        btn.setAttribute('aria-controls', item.submenu ? item.submenu.id : '');
-        btn.setAttribute('aria-expanded', 'false');
-        btn.setAttribute('aria-label', item.label);
-        btn.textContent = item.label;
-
-        if(item.icon) {
-          const img = document.createElement('img');
-          img.src = item.icon;
-          img.alt = `Ícone ${item.label}`;
-          img.className = 'menu-icon';
-          btn.prepend(img);
-        }
-
-        if(item.submenu) {
-          const arrow = document.createElement('span');
-          arrow.className = 'arrow';
-          arrow.textContent = '▶';
-          btn.appendChild(arrow);
-        }
-
-        menu.appendChild(btn);
-
-        // Eventos para abrir submenu
-        if(item.submenu) {
-          btn.addEventListener('click', e => {
-            e.stopPropagation();
-            toggleSubmenu(btn, item.submenu);
-          });
-        } else if(item.excluirBtn) {
-          btn.addEventListener('click', () => {
-            closeAllMenus();
-            hideAllTabs();
-            showTab('excluirDados');
-            renderExclusao();
-            btn.classList.add('active');
-          });
-        } else {
-          btn.addEventListener('click', () => {
-            closeAllMenus();
-            hideAllTabs();
-            showTab(item.id === 'btnDashboard' ? 'dashboard' : '');
-            btn.classList.add('active');
-          });
-        }
-      });
-    }
-
-    // Controla abrir/fechar submenu
-    function toggleSubmenu(button, submenu) {
-      const isOpen = button.getAttribute('aria-expanded') === 'true';
-      closeAllMenus();
-      hideAllTabs();
-      if(!isOpen) {
-        button.setAttribute('aria-expanded', 'true');
-        button.classList.add('active');
-        submenu.classList.add('open');
-        submenu.setAttribute('aria-hidden', 'false');
-        submenu.focus();
-      }
-    }
-
-    // Fecha todos menus e submenus
-    function closeAllMenus() {
-      document.querySelectorAll('.menu-btn, .excluir-btn').forEach(btn => {
-        btn.setAttribute('aria-expanded', 'false');
-        btn.classList.remove('active');
-      });
-      document.querySelectorAll('nav.submenu').forEach(menu => {
-        menu.classList.remove('open');
-        menu.setAttribute('aria-hidden', 'true');
-      });
-    }
-
-    // Esconde todas as abas
-    function hideAllTabs() {
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-        tab.hidden = true;
-      });
-    }
-
-    // Exibe aba específica
-    function showTab(id) {
-      if(!id) return;
-      hideAllTabs();
-      const el = document.getElementById(id);
-      if(el) {
-        el.classList.add('active');
-        el.hidden = false;
-        el.focus();
-      }
-    }
-
-    // Atualiza lista de usuários na tela de gerenciamento
-    function renderUsersList() {
-      usersList.innerHTML = '';
-      users.forEach((u, i) => {
-        const div = document.createElement('div');
-        div.style.borderBottom = '1px solid #ccc';
-        div.style.padding = '8px 0';
-
-        const perms = Object.entries(u.permissions).filter(([_, val]) => val).map(([key]) => key).join(', ');
-
-        div.innerHTML = `
-          <strong>${u.username}</strong> (${u.role})<br/>
-          Permissões: ${perms}<br/>
-          Ativo: ${u.active ? 'Sim' : 'Não'}
-          <br/>
-          <button data-index="${i}" class="btn-excluir-usuario">Excluir</button>
-          <button data-index="${i}" class="btn-reset-senha">Resetar Senha</button>
-        `;
-
-        usersList.appendChild(div);
-      });
-
-      // Botões Excluir Usuário
-      document.querySelectorAll('.btn-excluir-usuario').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-index'));
-          if(idx === users.findIndex(u => u.username === currentUser.username)) {
-            alert('Você não pode excluir seu próprio usuário.');
-            return;
-          }
-          if(confirm(`Excluir usuário ${users[idx].username}?`)) {
-            users.splice(idx, 1);
-            saveUsers();
-            renderUsersList();
-            showAlert('Usuário excluído com sucesso.');
-          }
-        });
-      });
-
-      // Botões Resetar Senha
-      document.querySelectorAll('.btn-reset-senha').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-index'));
-          users[idx].password = 'novaSenha123';
-          saveUsers();
-          showAlert(`Senha do usuário ${users[idx].username} resetada para 'novaSenha123'.`);
-        });
-      });
-    }
-
-    // Salva usuários no localStorage
-    function saveUsers() {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    // Atualiza nome fazenda nos lançamentos
-    function updateFazendaNome(idInput, idOutput) {
-      const val = document.getElementById(idInput).value.trim();
-      const nome = fazendas[val];
-      document.getElementById(idOutput).textContent = nome ? `Fazenda: ${nome}` : '';
-    }
-
-    // Calcula porcentagem brocamento
-    function calcularPorcentagemBrocamento() {
-      const entrenos = parseInt(document.getElementById('entrenos').value);
-      const brocado = parseInt(document.getElementById('brocado').value);
-      const resultado = document.getElementById('resultado');
-
-      if (!isNaN(entrenos) && !isNaN(brocado) && entrenos > 0) {
-        const porcentagem = (brocado / entrenos) * 100;
-        resultado.textContent = `Brocamento: ${porcentagem.toFixed(2).replace('.', ',')}%`;
-      } else {
-        resultado.textContent = '';
-      }
-    }
-
-    // Calcula soma perda
-    function calcularSomaPerda() {
-      const campos = ['canaInteira', 'tolete', 'toco', 'ponta', 'estilhaco', 'pedaco'];
-      let soma = 0;
-      campos.forEach(id => {
-        let val = parseFloat(document.getElementById(id).value);
-        if (isNaN(val)) val = 0;
-        soma += val;
-      });
-      document.getElementById('resultadoPerda').textContent = `Total Perda: ${soma.toFixed(2).replace('.', ',')}`;
-    }
-
-    // Função para salvar Brocamento
-    function salvarBrocamento() {
-      const entrenos = parseInt(document.getElementById('entrenos').value);
-      const brocado = parseInt(document.getElementById('brocado').value);
-
-      if (isNaN(entrenos) || entrenos <= 0 || isNaN(brocado)) {
-        showAlert('Preencha corretamente os campos de entrenos e brocado.', 'error');
-        return;
-      }
-
-      const porcentagem = (brocado / entrenos) * 100;
-
-      registros.push({
-        codigo: document.getElementById('codigo').value.trim(),
-        fazenda: fazendas[document.getElementById('codigo').value.trim()],
-        data: document.getElementById('data').value,
-        talhao: document.getElementById('talhao').value.trim(),
-        entrenos,
-        brocado,
-        brocamento: porcentagem.toFixed(2).replace('.', ','),
-        usuario: currentUser.username
-      });
-
-      localStorage.setItem('registros', JSON.stringify(registros));
-      showAlert('Inspeção salva com sucesso!', 'success');
-
-      // Limpa formulário
-      ['codigo','data','talhao','entrenos','brocado'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      document.getElementById('fazendaNome').textContent = '';
-      document.getElementById('resultado').textContent = '';
-      document.getElementById('codigo').focus();
-
-      renderGraficoBrocamento();
-    }
-
-    // Função para salvar Perda
-    function salvarPerda() {
-      const dataPerda = document.getElementById('dataPerda').value;
-      const codigoPerda = document.getElementById('codigoPerda').value.trim();
-      const frenteServico = document.getElementById('frenteServico').value.trim();
-      const talhaoPerda = document.getElementById('talhaoPerda').value.trim();
-      const turno = document.getElementById('turno').value;
-
-      if (!dataPerda || !codigoPerda || !frenteServico || !talhaoPerda) {
-        showAlert('Preencha todos os campos antes de salvar.', 'error');
-        return;
-      }
-
-      const canaInteira = parseFloat(document.getElementById('canaInteira').value) || 0;
-      const tolete = parseFloat(document.getElementById('tolete').value) || 0;
-      const toco = parseFloat(document.getElementById('toco').value) || 0;
-      const ponta = parseFloat(document.getElementById('ponta').value) || 0;
-      const estilhaco = parseFloat(document.getElementById('estilhaco').value) || 0;
-      const pedaco = parseFloat(document.getElementById('pedaco').value) || 0;
-
-      const total = canaInteira + tolete + toco + ponta + estilhaco + pedaco;
-      const media = total / 6;
-
-      perdas.push({
-        data: dataPerda,
-        codigo: codigoPerda,
-        fazenda: fazendas[codigoPerda],
-        frenteServico,
-        turno,
-        talhao: talhaoPerda,
-        canaInteira,
-        tolete,
-        toco,
-        ponta,
-        estilhaco,
-        pedaço: pedaco,
-        total,
-        media: media.toFixed(2).replace('.', ','),
-        usuario: currentUser.username
-      });
-
-      localStorage.setItem('perdas', JSON.stringify(perdas));
-      showAlert('Perda de Cana salva com sucesso!', 'success');
-
-      // Limpa formulário
-      ['dataPerda','codigoPerda','frenteServico','talhaoPerda'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('fazendaNomePerda').textContent = '';
-      ['canaInteira','tolete','toco','ponta','estilhaco','pedaco'].forEach(id => document.getElementById(id).value = '0');
-      document.getElementById('turno').value = 'A';
-      document.getElementById('resultadoPerda').textContent = '';
-      document.getElementById('dataPerda').focus();
-
-      renderGraficoPerda();
-    }
-
-    // Função para gerar PDF Brocamento
-    function gerarRelatorioBrocamentoPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape' });
-      const colunas = ["Data", "Fazenda", "Talhão", "Entrenós", "Brocado", "Brocamento (%)", "Usuário"];
-
-      const filtroFazenda = document.getElementById('fazendaFiltroBrocamento').value;
-      const inicio = document.getElementById('inicioBrocamento').value;
-      const fim = document.getElementById('fimBrocamento').value;
-
-      const dadosFiltrados = registros.filter(r => {
-        const dataValida = (!inicio || r.data >= inicio) && (!fim || r.data <= fim);
-        const fazendaValida = !filtroFazenda || r.codigo === filtroFazenda;
-        return dataValida && fazendaValida;
-      });
-
-      let totalEntrenos = 0;
-      let totalBrocado = 0;
-
-      const linhas = dadosFiltrados.map(r => {
-        totalEntrenos += r.entrenos;
-        totalBrocado += r.brocado;
-        return [r.data, r.fazenda, r.talhao, r.entrenos, r.brocado, r.brocamento, r.usuario];
-      });
-
-      const brocamentoTotal = totalEntrenos > 0 ? ((totalBrocado / totalEntrenos) * 100).toFixed(2).replace('.', ',') : "0,00";
-      linhas.push(["", "TOTAL", "", totalEntrenos, totalBrocado, brocamentoTotal, ""]);
-
-      doc.text("Relatório de Inspeção de Cana (Brocamento)", 14, 16);
-      doc.autoTable({
-        startY: 20,
-        head: [colunas],
-        body: linhas,
-        styles: { fontSize: 10, overflow: 'linebreak' },
-        footStyles: { fontStyle: 'bold' },
-        margin: { left: 10, right: 10 },
-      });
-
-      doc.save("relatorio-brocamento.pdf");
-    }
-
-    // Função exportar Excel Brocamento
-    function exportarBrocamentoExcel() {
-      const filtroFazenda = document.getElementById('fazendaFiltroBrocamento').value;
-      const inicio = document.getElementById('inicioBrocamento').value;
-      const fim = document.getElementById('fimBrocamento').value;
-
-      const dadosFiltrados = registros.filter(r => {
-        const dataValida = (!inicio || r.data >= inicio) && (!fim || r.data <= fim);
-        const fazendaValida = !filtroFazenda || r.codigo === filtroFazenda;
-        return dataValida && fazendaValida;
-      });
-
-      let totalEntrenos = 0;
-      let totalBrocado = 0;
-
-      let csv = "Data;Fazenda;Talhão;Entrenós;Brocado;Brocamento (%);Usuário\n";
-      dadosFiltrados.forEach(r => {
-        csv += `${r.data};${r.fazenda};${r.talhao};${r.entrenos};${r.brocado};${r.brocamento};${r.usuario}\n`;
-        totalEntrenos += r.entrenos;
-        totalBrocado += r.brocado;
-      });
-
-      const brocamentoTotal = totalEntrenos > 0 ? ((totalBrocado / totalEntrenos) * 100).toFixed(2).replace('.', ',') : "0,00";
-      csv += `;TOTAL;;${totalEntrenos};${totalBrocado};${brocamentoTotal};\n`;
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "relatorio-brocamento.csv";
-      link.click();
-    }
-
-    // Função gerar PDF Perda
-    function gerarRelatorioPerdaPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: 'landscape' });
-      const colunas = ["Data", "Fazenda", "Frente Serviço", "Turno", "Talhão", "Cana Inteira", "Tolete", "Toco", "Ponta", "Estilhaço", "Pedaço", "Total", "Usuário"];
-
-      const filtroFazenda = document.getElementById('fazendaFiltroPerda').value;
-      const filtroTalhao = document.getElementById('talhaoFiltroPerda').value.toLowerCase();
-      const filtroTurno = document.getElementById('turnoFiltroPerda').value;
-      const filtroFrente = document.getElementById('frenteFiltroPerda').value.toLowerCase();
-      const inicio = document.getElementById('inicioPerda').value;
-      const fim = document.getElementById('fimPerda').value;
-
-      const dadosFiltrados = perdas.filter(r => {
-        const dataValida = (!inicio || r.data >= inicio) && (!fim || r.data <= fim);
-        const fazendaValida = !filtroFazenda || r.codigo === filtroFazenda;
-        const talhaoValido = !filtroTalhao || r.talhao.toLowerCase().includes(filtroTalhao);
-        const turnoValido = !filtroTurno || r.turno === filtroTurno;
-        const frenteValida = !filtroFrente || r.frenteServico.toLowerCase().includes(filtroFrente);
-        return dataValida && fazendaValida && talhaoValido && turnoValido && frenteValida;
-      });
-
-      const linhas = dadosFiltrados.map(r => [
-        r.data,
-        r.fazenda || 'N/D',
-        r.frenteServico,
-        r.turno,
-        r.talhao,
-        r.canaInteira,
-        r.tolete,
-        r.toco,
-        r.ponta,
-        r.estilhaco,
-        r.pedaço,
-        r.total.toFixed(2).replace('.', ','),
-        r.usuario
-      ]);
-
-      const colunasPerda = ['canaInteira','tolete','toco','ponta','estilhaco','pedaço'];
-      let somaColunas = { canaInteira:0, tolete:0, toco:0, ponta:0, estilhaco:0, pedaço:0 };
-      let somaTotal = 0;
-      let qtdRegistros = dadosFiltrados.length || 1;
-
-      dadosFiltrados.forEach(r => {
-        colunasPerda.forEach(c => {
-          somaColunas[c] += r[c] || 0;
-        });
-        somaTotal += r.total || 0;
-      });
-
-      const mediaTotal = colunasPerda.map(c => (somaColunas[c]/qtdRegistros).toFixed(2).replace('.', ','));
-      const mediaTotalColuna = (somaTotal / qtdRegistros).toFixed(2).replace('.', ',');
-
-      linhas.push([
-        "",
-        "MÉDIA",
-        "",
-        "",
-        "",
-        mediaTotal[0],
-        mediaTotal[1],
-        mediaTotal[2],
-        mediaTotal[3],
-        mediaTotal[4],
-        mediaTotal[5],
-        mediaTotalColuna,
-        ""
-      ]);
-
-      doc.text("Relatório de Perda de Cana", 14, 16);
-      doc.autoTable({
-        startY: 20,
-        head: [colunas],
-        body: linhas,
-        styles: { fontSize: 9, overflow: 'linebreak' },
-        footStyles: { fontStyle: 'bold' },
-        margin: { left: 10, right: 10 },
-      });
-
-      doc.save("relatorio-perda.pdf");
-    }
-
-    // Função exportar Excel Perda
-    function exportarPerdaExcel() {
-      const filtroFazenda = document.getElementById('fazendaFiltroPerda').value;
-      const filtroTalhao = document.getElementById('talhaoFiltroPerda').value.toLowerCase();
-      const filtroTurno = document.getElementById('turnoFiltroPerda').value;
-      const filtroFrente = document.getElementById('frenteFiltroPerda').value.toLowerCase();
-      const inicio = document.getElementById('inicioPerda').value;
-      const fim = document.getElementById('fimPerda').value;
-
-      const dadosFiltrados = perdas.filter(r => {
-        const dataValida = (!inicio || r.data >= inicio) && (!fim || r.data <= fim);
-        const fazendaValida = !filtroFazenda || r.codigo === filtroFazenda;
-        const talhaoValido = !filtroTalhao || r.talhao.toLowerCase().includes(filtroTalhao);
-        const turnoValido = !filtroTurno || r.turno === filtroTurno;
-        const frenteValida = !filtroFrente || r.frenteServico.toLowerCase().includes(filtroFrente);
-        return dataValida && fazendaValida && talhaoValido && turnoValido && frenteValida;
-      });
-
-      let csv = "Data;Fazenda;Frente Serviço;Turno;Talhão;Cana Inteira;Tolete;Toco;Ponta;Estilhaço;Pedaço;Total;Usuário\n";
-
-      const colunasPerda = ['canaInteira','tolete','toco','ponta','estilhaco','pedaço'];
-      let somaColunas = { canaInteira:0, tolete:0, toco:0, ponta:0, estilhaco:0, pedaço:0 };
-      let somaTotal = 0;
-      let qtdRegistros = dadosFiltrados.length || 1;
-
-      dadosFiltrados.forEach(r => {
-        csv += `${r.data};${r.fazenda || 'N/D'};${r.frenteServico};${r.turno};${r.talhao};${r.canaInteira};${r.tolete};${r.toco};${r.ponta};${r.estilhaco};${r.pedaço};${r.total.toFixed(2).replace('.', ',')};${r.usuario}\n`;
-
-        colunasPerda.forEach(c => {
-          somaColunas[c] += r[c] || 0;
-        });
-        somaTotal += r.total || 0;
-      });
-
-      const mediaTotal = colunasPerda.map(c => (somaColunas[c]/qtdRegistros).toFixed(2).replace('.', ','));
-      const mediaTotalColuna = (somaTotal / qtdRegistros).toFixed(2).replace('.', ',');
-
-      csv += `;MÉDIA;;;;;${mediaTotal[0]};${mediaTotal[1]};${mediaTotal[2]};${mediaTotal[3]};${mediaTotal[4]};${mediaTotal[5]};${mediaTotalColuna};\n`;
-
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "relatorio-perda.csv";
-      link.click();
-    }
-
-    // Excluir registros
-    function excluirRegistro(tipo, index) {
-      if (!confirm("Tem certeza que deseja excluir este registro?")) return;
-
-      if (tipo === 'brocamento') {
-        registros.splice(index, 1);
-        localStorage.setItem('registros', JSON.stringify(registros));
-      } else if (tipo === 'perda') {
-        perdas.splice(index, 1);
-        localStorage.setItem('perdas', JSON.stringify(perdas));
-      }
-      showAlert('Registro excluído com sucesso!', 'success');
-      renderExclusao();
-      renderGraficoBrocamento();
-      renderGraficoPerda();
-    }
-
-    // Renderiza lista exclusão registros
-    function renderExclusao() {
-      const listaExclusao = document.getElementById("listaExclusao");
-      listaExclusao.innerHTML = '';
-
-      // Brocamento
-      const titleBroc = document.createElement('h3');
-      titleBroc.textContent = "Registros de Brocamento";
-      listaExclusao.appendChild(titleBroc);
-
-      if (registros.length === 0) {
-        const p = document.createElement('p');
-        p.textContent = "Nenhum registro de brocamento.";
-        listaExclusao.appendChild(p);
-      } else {
-        registros.forEach((r, i) => {
-          const p = document.createElement('p');
-          p.textContent = `Data: ${r.data} | Fazenda: ${r.fazenda} | Talhão: ${r.talhao} | Usuário: ${r.usuario}`;
-
-          const btnExcluir = document.createElement('button');
-          btnExcluir.className = 'btn-excluir';
-          btnExcluir.type = 'button';
-          btnExcluir.textContent = 'Excluir';
-          btnExcluir.addEventListener('click', () => excluirRegistro('brocamento', i));
-
-          p.appendChild(btnExcluir);
-          listaExclusao.appendChild(p);
-        });
-      }
-
-      // Perda
-      const titlePerda = document.createElement('h3');
-      titlePerda.textContent = "Registros de Perda de Cana";
-      listaExclusao.appendChild(titlePerda);
-
-      if (perdas.length === 0) {
-        const p = document.createElement('p');
-        p.textContent = "Nenhum registro de perda de cana.";
-        listaExclusao.appendChild(p);
-      } else {
-        perdas.forEach((r, i) => {
-          const p = document.createElement('p');
-          p.textContent = `Data: ${r.data} | Fazenda: ${r.fazenda || 'N/D'} | Frente de Serviço: ${r.frenteServico} | Talhão: ${r.talhao} | Usuário: ${r.usuario}`;
-
-          const btnExcluir = document.createElement('button');
-          btnExcluir.className = 'btn-excluir';
-          btnExcluir.type = 'button';
-          btnExcluir.textContent = 'Excluir';
-          btnExcluir.addEventListener('click', () => excluirRegistro('perda', i));
-
-          p.appendChild(btnExcluir);
-          listaExclusao.appendChild(p);
-        });
-      }
-    }
-
-    // Renderiza gráficos
-    let chartBrocamento = null;
-    let chartPerda = null;
-
-    function renderGraficoBrocamento() {
-      const ctx = document.getElementById('graficoBrocamento').getContext('2d');
-      const labels = registros.map(r => r.data);
-      const data = registros.map(r => parseFloat(r.brocamento.replace(',', '.')));
-
-      if(chartBrocamento) chartBrocamento.destroy();
-
-      chartBrocamento = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Rendimento do Dia (%)',
-            data,
-            fill: false,
-            borderColor: 'rgba(64,145,108,0.9)',
-            backgroundColor: 'rgba(64,145,108,0.6)',
-            tension: 0.3,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            borderWidth: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true, position: 'top' },
-            tooltip: { mode: 'nearest', intersect: false },
-            datalabels: {
-              display: true,
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              formatter: value => value.toFixed(2).replace('.', ',') + '%'
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              max: 100,
-              ticks: {
-                stepSize: 10,
-                callback: val => val + '%'
-              }
-            },
-            x: {
-              ticks: { maxRotation: 45, minRotation: 45 }
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
-    }
-
-    function renderGraficoPerda() {
-      const ctx = document.getElementById('graficoPerda').getContext('2d');
-      const labels = perdas.map(r => r.data);
-      const data = perdas.map(r => parseFloat(r.media.replace(',', '.')));
-
-      if(chartPerda) chartPerda.destroy();
-
-      chartPerda = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Perda Média (ton/ha)',
-            data,
-            backgroundColor: 'rgba(220,53,69,0.8)',
-            borderColor: 'rgba(180,30,40,0.9)',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true, position: 'top' },
-            tooltip: { mode: 'index', intersect: false },
-            datalabels: {
-              display: true,
-              align: 'top',
-              color: '#000',
-              font: { weight: 'bold', size: 12 },
-              formatter: value => value.toFixed(2).replace('.', ',')
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: { stepSize: 0.5 }
-            },
-            x: {
-              ticks: { maxRotation: 45, minRotation: 45 }
-            }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
-    }
-
-    // --- Eventos ---
-
-    btnLogin.addEventListener('click', () => {
-      const username = loginUser.value.trim();
-      const password = loginPass.value;
-
-      if(!username || !password) {
-        loginMessage.textContent = "Preencha usuário e senha.";
-        return;
-      }
-
-      const user = users.find(u => u.username === username && u.password === password);
-
-      if(!user) {
-        loginMessage.textContent = "Usuário ou senha inválidos.";
-        return;
-      }
-      if(!user.active) {
-        loginMessage.textContent = "Usuário inativo. Aguarde ativação pelo administrador.";
-        return;
-      }
-
-      currentUser = user;
-      loginMessage.textContent = "";
-      loginUser.value = "";
-      loginPass.value = "";
-      loginScreen.style.display = "none";
-      appScreen.style.display = "flex";
-
-      logoutInfo.style.display = "flex";
-      userNameDisplay.textContent = `Usuário: ${currentUser.username}`;
-      updateDateTime();
-
-      btnToggleMenu.setAttribute('aria-expanded', 'false');
-      menu.classList.remove('open');
-      menu.hidden = false;
-      content.classList.remove('menu-open');
-
-      renderMenu();
-      showTab('dashboard');
-
-      renderGraficoBrocamento();
-      renderGraficoPerda();
-      renderExclusao();
-      renderUsersList();
-    });
-
-    logoutBtn.addEventListener('click', () => {
-      currentUser = null;
-      loginScreen.style.display = "flex";
-      appScreen.style.display = "none";
-      menu.hidden = true;
-      logoutInfo.style.display = "none";
-      loginUser.focus();
-      closeAllMenus();
-      hideAllTabs();
-    });
-
-    btnToggleMenu.addEventListener('click', () => {
-      const aberto = menu.classList.toggle('open');
-      btnToggleMenu.setAttribute('aria-expanded', aberto ? 'true' : 'false');
-      if (aberto) {
-        content.classList.add('menu-open');
-      } else {
-        content.classList.remove('menu-open');
-        closeAllMenus();
-      }
-    });
-
-    // Fechar menus ao clicar fora
-    document.addEventListener('click', e => {
-      if(!menu.contains(e.target) &&
-         !submenuBroca.contains(e.target) &&
-         !submenuPerda.contains(e.target) &&
-         !submenuUsuarios.contains(e.target) &&
-         e.target !== btnToggleMenu) {
-        closeAllMenus();
-      }
-    });
-
-    // Navegação submenus para abas
-    submenuBroca.addEventListener('click', e => {
-      if(e.target.matches('button[data-target]')) {
-        showTab(e.target.dataset.target);
-        closeAllMenus();
-      }
-    });
-    submenuPerda.addEventListener('click', e => {
-      if(e.target.matches('button[data-target]')) {
-        showTab(e.target.dataset.target);
-        closeAllMenus();
-      }
-    });
-    submenuUsuarios.addEventListener('click', e => {
-      if(e.target.matches('button[data-target]')) {
-        showTab(e.target.dataset.target);
-        closeAllMenus();
-      }
-    });
-
-    // Atualiza nome fazenda ao digitar
-    document.getElementById('codigo').addEventListener('input', () => updateFazendaNome('codigo', 'fazendaNome'));
-    document.getElementById('codigoPerda').addEventListener('input', () => updateFazendaNome('codigoPerda', 'fazendaNomePerda'));
-
-    // Calcular porcentagem brocamento
-    ['entrenos', 'brocado'].forEach(id => document.getElementById(id).addEventListener('input', calcularPorcentagemBrocamento));
-
-    // Calcular soma perda
-    ['canaInteira', 'tolete', 'toco', 'ponta', 'estilhaco', 'pedaco'].forEach(id => document.getElementById(id).addEventListener('input', calcularSomaPerda));
-
-    // Botões salvar
-    document.getElementById('btnSalvarBrocamento').addEventListener('click', salvarBrocamento);
-    document.getElementById('btnSalvarPerda').addEventListener('click', salvarPerda);
-
-    // Botões gerar PDF e Excel Brocamento
-    document.getElementById('btnPDFBrocamento').addEventListener('click', gerarRelatorioBrocamentoPDF);
-    document.getElementById('btnExcelBrocamento').addEventListener('click', exportarBrocamentoExcel);
-
-    // Botões gerar PDF e Excel Perda
-    document.getElementById('btnPDFPerda').addEventListener('click', gerarRelatorioPerdaPDF);
-    document.getElementById('btnExcelPerda').addEventListener('click', exportarPerdaExcel);
-
-    // Criar usuário
-    btnCreateUser.addEventListener('click', () => {
-      if(!newUserUsername.value.trim() || !newUserPassword.value) {
-        showAlert("Preencha usuário e senha para criar novo usuário.", "error");
-        return;
-      }
-      if(users.some(u => u.username === newUserUsername.value.trim())) {
-        showAlert("Usuário já existe.", "error");
-        return;
-      }
-      const novoUser = {
-        username: newUserUsername.value.trim(),
-        password: newUserPassword.value,
-        role: newUserRole.value,
-        active: true,
-        permissions: {
-          dashboard: permDashboard.checked,
-          lancamento: permLancamento.checked,
-          relatorio: permRelatorio.checked,
-          excluir: permExcluir.checked,
-          gerenciarUsuarios: permGerenciarUsuarios.checked
-        }
-      };
-      users.push(novoUser);
-      saveUsers();
-      renderUsersList();
-      showAlert(`Usuário ${novoUser.username} criado com sucesso.`);
-      // Reset campos
-      newUserUsername.value = '';
-      newUserPassword.value = '';
-      newUserRole.value = 'user';
-      permDashboard.checked = false;
-      permLancamento.checked = false;
-      permRelatorio.checked = false;
-      permExcluir.checked = false;
-      permGerenciarUsuarios.checked = false;
-    });
-
-    // Avança input com Enter (tabulação)
-    document.addEventListener('keydown', e => {
-      if(e.key === 'Enter') {
-        const formElements = Array.from(document.querySelectorAll('input, select, textarea, button')).filter(el => el.offsetParent !== null);
-        const index = formElements.indexOf(document.activeElement);
-        if(index > -1 && index < formElements.length -1) {
-          e.preventDefault();
-          formElements[index+1].focus();
-        }
-      }
-    });
-
-  </script>
-</body>
-</html>
+diff --git a/index.html b/index.html
+index 1aa6aa9ea8b3541ac9094ffb6f87446744de7397..c8d998be68548069909a1d687b52de3b0f8eaf8c 100644
+--- a/index.html
++++ b/index.html
+@@ -1,72 +1,77 @@
+ <!DOCTYPE html>
+ <html lang="pt-BR">
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <title>Inspeção de Cana</title>
++  <link rel="preconnect" href="https://fonts.googleapis.com">
++  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+   <style>
+     :root {
+       --color-primary: #2d6a4f;
+       --color-accent: #40916c;
+       --color-bg: #f8f9fa;
+       --color-text: #212529;
+       --color-white: #fff;
+       --color-border: #ccc;
+       --color-danger: #dc3545;
+       --shadow: rgba(0, 0, 0, 0.15);
+-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
++      --font-family: 'Inter', sans-serif;
++      --menu-width: clamp(220px, 25vw, 300px);
++      --submenu-width: clamp(180px, 20vw, 260px);
+     }
+ 
+     * {
+       box-sizing: border-box;
+     }
+ 
+     body {
+       margin: 0;
+       font-family: var(--font-family);
+       background-color: var(--color-bg);
+       color: var(--color-text);
+       min-height: 100vh;
+       display: flex;
+       flex-direction: column;
+     }
+ 
+     /* Tela de login */
+     #loginScreen {
+       flex: 1;
+       background-color: var(--color-bg);
+       display: flex;
+       justify-content: center;
+       align-items: center;
+     }
+     #loginBox {
+       background: var(--color-white);
+       box-shadow: 0 4px 15px var(--shadow);
+       border-radius: 20px;
+       padding: 30px 40px;
+-      width: 320px;
++      width: min(90%, 320px);
+       text-align: center;
+     }
+     #loginBox h2 {
+       margin-bottom: 20px;
+       color: var(--color-primary);
+       letter-spacing: 4px;
+       font-weight: 700;
+     }
+     #loginBox input {
+       width: 100%;
+       padding: 12px;
+       margin: 10px 0;
+       border-radius: 15px;
+       border: 1px solid var(--color-border);
+       font-size: 16px;
+       outline: none;
+       transition: border-color 0.3s ease;
+     }
+     #loginBox input:focus {
+       border-color: var(--color-accent);
+       box-shadow: 0 0 8px var(--color-accent);
+     }
+     #loginBox button {
+       margin-top: 20px;
+       width: 100%;
+@@ -88,85 +93,85 @@
+       min-height: 20px;
+       margin-top: 10px;
+     }
+ 
+     /* Header fixo */
+     header {
+       position: fixed;
+       top: 0;
+       left: 0;
+       right: 0;
+       height: 60px;
+       background: var(--color-primary);
+       color: var(--color-white);
+       display: flex;
+       align-items: center;
+       padding: 0 20px;
+       box-shadow: 0 3px 8px var(--shadow);
+       z-index: 1000;
+       user-select: none;
+       justify-content: space-between;
+     }
+ 
+     header h1 {
+       margin: 0;
+       font-weight: 700;
+-      font-size: 22px;
++      font-size: clamp(18px, 4vw, 24px);
+       flex-grow: 1;
+       text-align: center;
+     }
+ 
+     /* Botão hamburger */
+     .menu-toggle {
+       background: rgba(255, 255, 255, 0.9);
+       border-radius: 8px;
+       border: none;
+       cursor: pointer;
+       width: 50px;
+       height: 40px;
+       display: flex;
+       flex-direction: column;
+       justify-content: space-around;
+       padding: 6px 8px;
+       z-index: 1100;
+       box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+       user-select: none;
+     }
+ 
+     .menu-toggle div {
+       height: 5px;
+       background: #333;
+       border-radius: 3px;
+     }
+ 
+     /* Menu lateral */
+     nav.menu {
+       position: fixed;
+       top: 60px;
+       left: 0;
+       bottom: 0;
+-      width: 240px;
++      width: var(--menu-width);
+       background: var(--color-white);
+       border-right: 1px solid var(--color-border);
+       box-shadow: 3px 0 10px var(--shadow);
+       overflow-y: auto;
+       transform: translateX(-100%);
+       transition: transform 0.3s ease;
+       z-index: 999;
+       border-top-right-radius: 20px;
+       border-bottom-right-radius: 20px;
+     }
+ 
+     nav.menu.open {
+       transform: translateX(0);
+     }
+ 
+     /* Ícones do menu 70x70 */
+     .menu-icon {
+       width: 70px;
+       height: 70px;
+       border-radius: 50%;
+       object-fit: cover;
+       border: 3px solid var(--color-accent);
+       box-shadow: 0 2px 6px rgba(64,145,108,0.4);
+       user-select: none;
+       margin-right: 10px;
+@@ -199,98 +204,98 @@
+     }
+ 
+     .menu-btn.active, .excluir-btn.active {
+       background-color: var(--color-accent);
+       color: var(--color-white);
+       border-radius: 20px;
+     }
+ 
+     .menu-btn .arrow {
+       position: absolute;
+       right: 16px;
+       top: 50%;
+       transform: translateY(-50%) rotate(0deg);
+       transition: transform 0.3s ease;
+       font-size: 16px;
+     }
+ 
+     .menu-btn.active .arrow {
+       transform: translateY(-50%) rotate(90deg);
+     }
+ 
+     /* Submenu */
+     nav.submenu {
+       position: fixed;
+       top: 60px;
+-      left: 240px;
+-      width: 220px;
++      left: var(--menu-width);
++      width: var(--submenu-width);
+       bottom: 0;
+       background: var(--color-white);
+       border-left: 1px solid var(--color-border);
+       box-shadow: -3px 0 10px var(--shadow);
+       overflow-y: auto;
+       display: none;
+       z-index: 998;
+       border-top-left-radius: 20px;
+       border-bottom-left-radius: 20px;
+     }
+ 
+     nav.submenu.open {
+       display: block;
+     }
+ 
+     nav.submenu button {
+       width: 100%;
+       padding: 16px 20px;
+       background: none;
+       border: none;
+       text-align: left;
+       font-size: 16px;
+       cursor: pointer;
+       font-weight: 600;
+       border-bottom: 1px solid #eee;
+       color: var(--color-text);
+       transition: background-color 0.3s ease;
+       border-radius: 0;
+     }
+ 
+     nav.submenu button:hover {
+       background-color: var(--color-accent);
+       color: var(--color-white);
+       border-radius: 20px;
+     }
+ 
+     /* Conteúdo principal */
+     main.content {
+       margin-top: 60px;
+       padding: 28px 35px;
+       transition: margin-left 0.3s ease;
+       min-height: calc(100vh - 60px);
+     }
+ 
+     main.content.menu-open {
+-      margin-left: 460px;
++      margin-left: calc(var(--menu-width) + var(--submenu-width));
+     }
+ 
+     .tab-content {
+       display: none;
+     }
+ 
+     .tab-content.active {
+       display: block;
+     }
+ 
+     .card {
+       background: var(--color-white);
+       padding: 30px 30px;
+       border-radius: 16px;
+       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+       font-size: 17px;
+       max-width: 900px;
+       margin: 0 auto;
+     }
+ 
+     label {
+       display: block;
+       margin-top: 20px;
+       font-weight: 700;
+       color: var(--color-primary);
+@@ -416,67 +421,70 @@
+       border-radius: 12px;
+       font-weight: 600;
+       user-select: none;
+       display: flex;
+       align-items: center;
+       gap: 10px;
+       font-size: 14px;
+       z-index: 1200;
+     }
+     #logoutBtn {
+       background: #b41a1a;
+       border: none;
+       color: white;
+       padding: 6px 12px;
+       border-radius: 12px;
+       cursor: pointer;
+       font-weight: 700;
+       transition: background-color 0.3s ease;
+     }
+     #logoutBtn:hover {
+       background: #d63030;
+     }
+ 
+     /* Responsividade */
+     @media (max-width: 900px) {
++      :root {
++        --menu-width: 200px;
++        --submenu-width: 180px;
++      }
++
+       nav.menu {
+-        width: 200px;
+         border-radius: 0 20px 20px 0;
+       }
+ 
+       nav.submenu {
+-        left: 200px;
+-        width: 180px;
+         border-radius: 0 0 0 20px;
+       }
+-
+-      main.content.menu-open {
+-        margin-left: 380px;
+-      }
+     }
+ 
+     @media (max-width: 700px) {
++      :root {
++        --menu-width: 100%;
++        --submenu-width: 100%;
++      }
++
+       nav.menu,
+       nav.submenu {
+         position: fixed;
+         top: 60px;
+         bottom: auto;
+         height: auto;
+         width: 100%;
+         max-height: 300px;
+         border-radius: 0;
+         box-shadow: 0 3px 15px var(--shadow);
+         overflow-y: auto;
+         transform: translateY(-100%);
+         transition: transform 0.3s ease;
+         left: 0 !important;
+       }
+ 
+       nav.menu.open,
+       nav.submenu.open {
+         transform: translateY(0);
+       }
+ 
+       main.content.menu-open {
+         margin-left: 0;
+         margin-top: 360px;
+       }
