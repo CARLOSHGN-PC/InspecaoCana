@@ -993,7 +993,7 @@
       // Botões Excluir Usuário
       document.querySelectorAll('.btn-excluir-usuario').forEach(btn => {
         btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-index'));
+          const idx = parseInt(btn.getAttribute('data-index'), 10);
           if(idx === users.findIndex(u => u.username === currentUser.username)) {
             alert('Você não pode excluir seu próprio usuário.');
             return;
@@ -1010,7 +1010,7 @@
       // Botões Resetar Senha
       document.querySelectorAll('.btn-reset-senha').forEach(btn => {
         btn.addEventListener('click', () => {
-          const idx = parseInt(btn.getAttribute('data-index'));
+          const idx = parseInt(btn.getAttribute('data-index'), 10);
           users[idx].password = 'novaSenha123';
           saveUsers();
           showAlert(`Senha do usuário ${users[idx].username} resetada para 'novaSenha123'.`);
@@ -1032,8 +1032,8 @@
 
     // Calcula porcentagem brocamento
     function calcularPorcentagemBrocamento() {
-      const entrenos = parseInt(document.getElementById('entrenos').value);
-      const brocado = parseInt(document.getElementById('brocado').value);
+      const entrenos = parseInt(document.getElementById('entrenos').value, 10);
+      const brocado = parseInt(document.getElementById('brocado').value, 10);
       const resultado = document.getElementById('resultado');
 
       if (!isNaN(entrenos) && !isNaN(brocado) && entrenos > 0) {
@@ -1058,8 +1058,8 @@
 
     // Função para salvar Brocamento
     function salvarBrocamento() {
-      const entrenos = parseInt(document.getElementById('entrenos').value);
-      const brocado = parseInt(document.getElementById('brocado').value);
+      const entrenos = parseInt(document.getElementById('entrenos').value, 10);
+      const brocado = parseInt(document.getElementById('brocado').value, 10);
 
       if (isNaN(entrenos) || entrenos <= 0 || isNaN(brocado)) {
         showAlert('Preencha corretamente os campos de entrenos e brocado.', 'error');
