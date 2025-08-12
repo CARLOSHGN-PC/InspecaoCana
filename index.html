@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Inspeção de Cana</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --color-primary: #2d6a4f;
@@ -14,7 +17,9 @@
       --color-border: #ccc;
       --color-danger: #dc3545;
       --shadow: rgba(0, 0, 0, 0.15);
-      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      --font-family: 'Inter', sans-serif;
+      --menu-width: clamp(220px, 25vw, 300px);
+      --submenu-width: clamp(180px, 20vw, 260px);
     }
 
     * {
@@ -44,7 +49,7 @@
       box-shadow: 0 4px 15px var(--shadow);
       border-radius: 20px;
       padding: 30px 40px;
-      width: 320px;
+      width: min(90%, 320px);
       text-align: center;
     }
     #loginBox h2 {
@@ -110,7 +115,7 @@
     header h1 {
       margin: 0;
       font-weight: 700;
-      font-size: 22px;
+      font-size: clamp(18px, 4vw, 24px);
       flex-grow: 1;
       text-align: center;
     }
@@ -144,7 +149,7 @@
       top: 60px;
       left: 0;
       bottom: 0;
-      width: 240px;
+      width: var(--menu-width);
       background: var(--color-white);
       border-right: 1px solid var(--color-border);
       box-shadow: 3px 0 10px var(--shadow);
@@ -221,8 +226,8 @@
     nav.submenu {
       position: fixed;
       top: 60px;
-      left: 240px;
-      width: 220px;
+      left: var(--menu-width);
+      width: var(--submenu-width);
       bottom: 0;
       background: var(--color-white);
       border-left: 1px solid var(--color-border);
@@ -268,7 +273,7 @@
     }
 
     main.content.menu-open {
-      margin-left: 460px;
+      margin-left: calc(var(--menu-width) + var(--submenu-width));
     }
 
     .tab-content {
@@ -438,23 +443,26 @@
 
     /* Responsividade */
     @media (max-width: 900px) {
+      :root {
+        --menu-width: 200px;
+        --submenu-width: 180px;
+      }
+
       nav.menu {
-        width: 200px;
         border-radius: 0 20px 20px 0;
       }
 
       nav.submenu {
-        left: 200px;
-        width: 180px;
         border-radius: 0 0 0 20px;
-      }
-
-      main.content.menu-open {
-        margin-left: 380px;
       }
     }
 
     @media (max-width: 700px) {
+      :root {
+        --menu-width: 100%;
+        --submenu-width: 100%;
+      }
+
       nav.menu,
       nav.submenu {
         position: fixed;
