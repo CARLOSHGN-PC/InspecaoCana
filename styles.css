@@ -1,0 +1,7 @@
+body {
+  background-color: #f8f9fa;
+}
+.tab { display: none; }
+.tab.active { display: block; }
+
+#faltaColher li { padding: 0.5rem; }
