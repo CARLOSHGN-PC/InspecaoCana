@@ -1,352 +1,71 @@
-diff --git a/index.html b/index.html
-index 1aa6aa9ea8b3541ac9094ffb6f87446744de7397..c8d998be68548069909a1d687b52de3b0f8eaf8c 100644
---- a/index.html
-+++ b/index.html
-@@ -1,72 +1,77 @@
- <!DOCTYPE html>
- <html lang="pt-BR">
- <head>
-   <meta charset="UTF-8" />
-   <meta name="viewport" content="width=device-width, initial-scale=1" />
-   <title>Inspeção de Cana</title>
-+  <link rel="preconnect" href="https://fonts.googleapis.com">
-+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-   <style>
-     :root {
-       --color-primary: #2d6a4f;
-       --color-accent: #40916c;
-       --color-bg: #f8f9fa;
-       --color-text: #212529;
-       --color-white: #fff;
-       --color-border: #ccc;
-       --color-danger: #dc3545;
-       --shadow: rgba(0, 0, 0, 0.15);
--      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-+      --font-family: 'Inter', sans-serif;
-+      --menu-width: clamp(220px, 25vw, 300px);
-+      --submenu-width: clamp(180px, 20vw, 260px);
-     }
- 
-     * {
-       box-sizing: border-box;
-     }
- 
-     body {
-       margin: 0;
-       font-family: var(--font-family);
-       background-color: var(--color-bg);
-       color: var(--color-text);
-       min-height: 100vh;
-       display: flex;
-       flex-direction: column;
-     }
- 
-     /* Tela de login */
-     #loginScreen {
-       flex: 1;
-       background-color: var(--color-bg);
-       display: flex;
-       justify-content: center;
-       align-items: center;
-     }
-     #loginBox {
-       background: var(--color-white);
-       box-shadow: 0 4px 15px var(--shadow);
-       border-radius: 20px;
-       padding: 30px 40px;
--      width: 320px;
-+      width: min(90%, 320px);
-       text-align: center;
-     }
-     #loginBox h2 {
-       margin-bottom: 20px;
-       color: var(--color-primary);
-       letter-spacing: 4px;
-       font-weight: 700;
-     }
-     #loginBox input {
-       width: 100%;
-       padding: 12px;
-       margin: 10px 0;
-       border-radius: 15px;
-       border: 1px solid var(--color-border);
-       font-size: 16px;
-       outline: none;
-       transition: border-color 0.3s ease;
-     }
-     #loginBox input:focus {
-       border-color: var(--color-accent);
-       box-shadow: 0 0 8px var(--color-accent);
-     }
-     #loginBox button {
-       margin-top: 20px;
-       width: 100%;
-@@ -88,85 +93,85 @@
-       min-height: 20px;
-       margin-top: 10px;
-     }
- 
-     /* Header fixo */
-     header {
-       position: fixed;
-       top: 0;
-       left: 0;
-       right: 0;
-       height: 60px;
-       background: var(--color-primary);
-       color: var(--color-white);
-       display: flex;
-       align-items: center;
-       padding: 0 20px;
-       box-shadow: 0 3px 8px var(--shadow);
-       z-index: 1000;
-       user-select: none;
-       justify-content: space-between;
-     }
- 
-     header h1 {
-       margin: 0;
-       font-weight: 700;
--      font-size: 22px;
-+      font-size: clamp(18px, 4vw, 24px);
-       flex-grow: 1;
-       text-align: center;
-     }
- 
-     /* Botão hamburger */
-     .menu-toggle {
-       background: rgba(255, 255, 255, 0.9);
-       border-radius: 8px;
-       border: none;
-       cursor: pointer;
-       width: 50px;
-       height: 40px;
-       display: flex;
-       flex-direction: column;
-       justify-content: space-around;
-       padding: 6px 8px;
-       z-index: 1100;
-       box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
-       user-select: none;
-     }
- 
-     .menu-toggle div {
-       height: 5px;
-       background: #333;
-       border-radius: 3px;
-     }
- 
-     /* Menu lateral */
-     nav.menu {
-       position: fixed;
-       top: 60px;
-       left: 0;
-       bottom: 0;
--      width: 240px;
-+      width: var(--menu-width);
-       background: var(--color-white);
-       border-right: 1px solid var(--color-border);
-       box-shadow: 3px 0 10px var(--shadow);
-       overflow-y: auto;
-       transform: translateX(-100%);
-       transition: transform 0.3s ease;
-       z-index: 999;
-       border-top-right-radius: 20px;
-       border-bottom-right-radius: 20px;
-     }
- 
-     nav.menu.open {
-       transform: translateX(0);
-     }
- 
-     /* Ícones do menu 70x70 */
-     .menu-icon {
-       width: 70px;
-       height: 70px;
-       border-radius: 50%;
-       object-fit: cover;
-       border: 3px solid var(--color-accent);
-       box-shadow: 0 2px 6px rgba(64,145,108,0.4);
-       user-select: none;
-       margin-right: 10px;
-@@ -199,98 +204,98 @@
-     }
- 
-     .menu-btn.active, .excluir-btn.active {
-       background-color: var(--color-accent);
-       color: var(--color-white);
-       border-radius: 20px;
-     }
- 
-     .menu-btn .arrow {
-       position: absolute;
-       right: 16px;
-       top: 50%;
-       transform: translateY(-50%) rotate(0deg);
-       transition: transform 0.3s ease;
-       font-size: 16px;
-     }
- 
-     .menu-btn.active .arrow {
-       transform: translateY(-50%) rotate(90deg);
-     }
- 
-     /* Submenu */
-     nav.submenu {
-       position: fixed;
-       top: 60px;
--      left: 240px;
--      width: 220px;
-+      left: var(--menu-width);
-+      width: var(--submenu-width);
-       bottom: 0;
-       background: var(--color-white);
-       border-left: 1px solid var(--color-border);
-       box-shadow: -3px 0 10px var(--shadow);
-       overflow-y: auto;
-       display: none;
-       z-index: 998;
-       border-top-left-radius: 20px;
-       border-bottom-left-radius: 20px;
-     }
- 
-     nav.submenu.open {
-       display: block;
-     }
- 
-     nav.submenu button {
-       width: 100%;
-       padding: 16px 20px;
-       background: none;
-       border: none;
-       text-align: left;
-       font-size: 16px;
-       cursor: pointer;
-       font-weight: 600;
-       border-bottom: 1px solid #eee;
-       color: var(--color-text);
-       transition: background-color 0.3s ease;
-       border-radius: 0;
-     }
- 
-     nav.submenu button:hover {
-       background-color: var(--color-accent);
-       color: var(--color-white);
-       border-radius: 20px;
-     }
- 
-     /* Conteúdo principal */
-     main.content {
-       margin-top: 60px;
-       padding: 28px 35px;
-       transition: margin-left 0.3s ease;
-       min-height: calc(100vh - 60px);
-     }
- 
-     main.content.menu-open {
--      margin-left: 460px;
-+      margin-left: calc(var(--menu-width) + var(--submenu-width));
-     }
- 
-     .tab-content {
-       display: none;
-     }
- 
-     .tab-content.active {
-       display: block;
-     }
- 
-     .card {
-       background: var(--color-white);
-       padding: 30px 30px;
-       border-radius: 16px;
-       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-       font-size: 17px;
-       max-width: 900px;
-       margin: 0 auto;
-     }
- 
-     label {
-       display: block;
-       margin-top: 20px;
-       font-weight: 700;
-       color: var(--color-primary);
-@@ -416,67 +421,70 @@
-       border-radius: 12px;
-       font-weight: 600;
-       user-select: none;
-       display: flex;
-       align-items: center;
-       gap: 10px;
-       font-size: 14px;
-       z-index: 1200;
-     }
-     #logoutBtn {
-       background: #b41a1a;
-       border: none;
-       color: white;
-       padding: 6px 12px;
-       border-radius: 12px;
-       cursor: pointer;
-       font-weight: 700;
-       transition: background-color 0.3s ease;
-     }
-     #logoutBtn:hover {
-       background: #d63030;
-     }
- 
-     /* Responsividade */
-     @media (max-width: 900px) {
-+      :root {
-+        --menu-width: 200px;
-+        --submenu-width: 180px;
-+      }
-+
-       nav.menu {
--        width: 200px;
-         border-radius: 0 20px 20px 0;
-       }
- 
-       nav.submenu {
--        left: 200px;
--        width: 180px;
-         border-radius: 0 0 0 20px;
-       }
--
--      main.content.menu-open {
--        margin-left: 380px;
--      }
-     }
- 
-     @media (max-width: 700px) {
-+      :root {
-+        --menu-width: 100%;
-+        --submenu-width: 100%;
-+      }
-+
-       nav.menu,
-       nav.submenu {
-         position: fixed;
-         top: 60px;
-         bottom: auto;
-         height: auto;
-         width: 100%;
-         max-height: 300px;
-         border-radius: 0;
-         box-shadow: 0 3px 15px var(--shadow);
-         overflow-y: auto;
-         transform: translateY(-100%);
-         transition: transform 0.3s ease;
-         left: 0 !important;
-       }
- 
-       nav.menu.open,
-       nav.submenu.open {
-         transform: translateY(0);
-       }
- 
-       main.content.menu-open {
-         margin-left: 0;
-         margin-top: 360px;
-       }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inspeção de Cana - Planejamento</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    nav button { margin-right: 8px; }
+    .tab { display: none; margin-top: 20px; }
+    .tab.active { display: block; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+  </style>
+</head>
+<body>
+  <nav>
+    <button onclick="showTab('plantio')">Planejamento de Plantio</button>
+    <button onclick="showTab('colheita')">Planejamento de Colheita</button>
+    <button onclick="showTab('relatorios')">Relatórios</button>
+  </nav>
+
+  <section id="plantio" class="tab active">
+    <h2>Planejamento de Plantio</h2>
+    <form id="plantioForm">
+      <input name="talhao" placeholder="Talhão" required />
+      <input name="variedade" placeholder="Variedade" required />
+      <input name="area" type="number" step="0.01" placeholder="Área (ha)" required />
+      <input name="data" type="date" required />
+      <button type="submit">Adicionar</button>
+    </form>
+    <table id="plantioTable">
+      <thead>
+        <tr><th>Talhão</th><th>Variedade</th><th>Área (ha)</th><th>Data</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="colheita" class="tab">
+    <h2>Planejamento de Colheita</h2>
+    <form id="colheitaForm">
+      <input name="talhao" placeholder="Talhão" required />
+      <input name="data" type="date" required />
+      <button type="submit">Gerar Ordem de Corte</button>
+    </form>
+    <table id="colheitaTable">
+      <thead>
+        <tr><th>Ordem</th><th>Talhão</th><th>Data</th><th>Status</th><th>Ações</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="relatorios" class="tab">
+    <h2>Relatórios</h2>
+    <button onclick="gerarRelatorios()">Atualizar Relatórios</button>
+    <h3>Censo Varietal</h3>
+    <table id="censoTable">
+      <thead>
+        <tr><th>Variedade</th><th>Área (ha)</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <h3>Talhões a Colher</h3>
+    <ul id="faltaColher"></ul>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
