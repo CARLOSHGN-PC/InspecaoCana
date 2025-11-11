@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="3.539" timestamp="2025-10-20T11:57:31.795979+00:00" hostname="devbox"><testcase classname="tests.test_verify_gps_tracking" name="test_automatic_gps_tracking" time="3.450" /></testsuite></testsuites>

@@ -1,0 +1,13 @@
+# Ignorar a pasta de dependências do Node.js (gigante!)
+node_modules/
+
+# Ignorar o arquivo de segredos do Firebase (importante!)
+android/app/google-services.json
+
+# Ignorar pastas de build do Android
+android/app/build/
+android/build/
+android/.gradle/
+
+# Ignorar caches do Python
+__pycache__/

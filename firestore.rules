@@ -1,0 +1,155 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- FUNÇÕES AUXILIARES ---
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function getUserRole() {
+      return getUserData().role;
+    }
+
+    function getUserCompanyId() {
+      // Retorna o companyId do usuário, ou nulo se não existir (importante para super-admin).
+      return getUserData().get('companyId', null);
+    }
+
+    // Função de acesso principal:
+    // Garante que o usuário seja um super-admin OU pertença à empresa correta.
+    // O super-admin não deve ser restringido por um companyId.
+    function canAccessCompanyData(companyId) {
+      return getUserRole() == 'super-admin' || (getUserCompanyId() != null && getUserCompanyId() == companyId);
+    }
+
+    // --- REGRAS GERAIS ---
+
+    match /companies/{companyId} {
+      allow read, write: if getUserRole() == 'super-admin';
+      allow get: if request.auth.uid != null && getUserCompanyId() == companyId;
+    }
+
+    match /users/{userId} {
+      allow get: if request.auth.uid == userId
+                  || getUserRole() == 'super-admin'
+                  || (getUserRole() == 'admin' && getUserCompanyId() == get(/databases/$(database)/documents/users/$(userId)).data.companyId);
+
+      allow list: if getUserRole() in ['admin', 'super-admin'];
+
+      allow create: if getUserRole() == 'super-admin'
+                   || (getUserRole() == 'admin' && request.resource.data.companyId == getUserCompanyId());
+
+      allow update: if request.auth.uid == userId
+                   || getUserRole() == 'super-admin'
+                   || (getUserRole() == 'admin'
+                       && get(/databases/$(database)/documents/users/$(userId)).data.companyId == getUserCompanyId()
+                       && request.resource.data.role != 'super-admin');
+
+      allow delete: if false;
+    }
+
+    // --- REGRAS PARA COLEÇÕES DE DADOS ESPECÍFICAS DA EMPRESA ---
+
+    match /fazendas/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /clima/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /apontamentosPlantio/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /frentesDePlantio/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /cigarrinhaAmostragem/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /personnel/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /registros/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /perdas/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /planos/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /harvestPlans/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /armadilhas/{trapId} {
+      allow read, update: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+
+      // [CORRIGIDO] Regra de exclusão simplificada e mais segura.
+      allow delete: if getUserRole() == 'super-admin'
+                  || (
+                      canAccessCompanyData(resource.data.companyId) && (
+                          getUserRole() in ['admin', 'administrador', 'Lider', 'Supervisor'] ||
+                          request.auth.uid == resource.data.instaladoPor
+                      )
+                  )
+                  // Regra para dados legados sem companyId, apenas para admins.
+                  || (!('companyId' in resource.data) && getUserRole() in ['admin', 'administrador', 'super-admin']);
+
+      match /coletas/{coletaId} {
+        allow read, write, delete: if canAccessCompanyData(get(/databases/$(database)/documents/armadilhas/$(trapId)).data.companyId);
+      }
+    }
+    match /cigarrinha/{docId} {
+      allow read, update, delete: if canAccessCompanyData(resource.data.companyId);
+      allow create: if canAccessCompanyData(request.resource.data.companyId);
+    }
+    match /config/{companyId} {
+      allow read, write: if canAccessCompanyData(companyId);
+    }
+    match /userDrafts/{userId} {
+      allow read, write: if request.auth.uid == userId;
+    }
+
+    match /global_configs/{docId} {
+      allow read: if request.auth.uid != null;
+      allow write: if getUserRole() == 'super-admin';
+    }
+
+    match /sync_history_store/{docId} {
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow read: if canAccessCompanyData(resource.data.companyId) || request.auth.uid == resource.data.userId;
+      allow update: if request.auth.uid == resource.data.userId || getUserRole() == 'super-admin';
+      allow delete: if getUserRole() == 'super-admin';
+    }
+
+    match /configChangeHistory/{docId} {
+      allow create: if (getUserRole() in ['admin', 'super-admin']) && canAccessCompanyData(request.resource.data.companyId);
+      allow list: if getUserRole() in ['admin', 'super-admin'];
+      allow get: if (getUserRole() in ['admin', 'super-admin']) && canAccessCompanyData(resource.data.companyId);
+      allow update: if false;
+      allow delete: if getUserRole() == 'super-admin';
+    }
+
+    // [CORRIGIDO] notifications: Notificações para utilizadores
+    match /notifications/{docId} {
+      // Criação: Super-admins podem criar para qualquer um. Utilizadores normais podem criar para si mesmos.
+      allow create: if getUserRole() == 'super-admin' || request.auth.uid == request.resource.data.userId;
+
+      // Acesso (Leitura, Atualização, Exclusão): Utilizadores só podem aceder às suas próprias notificações. Super-admin pode ler tudo.
+      allow read, update, delete: if request.auth.uid == resource.data.userId;
+      allow list: if getUserRole() == 'super-admin'; // Permite que o super-admin liste todas se necessário.
+    }
+  }
+}

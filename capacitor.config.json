@@ -1,0 +1,14 @@
+{
+  "appId": "com.agrovetor.app",
+  "appName": "AgroVetor",
+  "webDir": "docs",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "app.agrovetor.com"
+  },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    }
+  }
+}
