@@ -148,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         { label: 'Relatório de Risco', icon: 'fas fa-shield-alt', target: 'relatorioRisco', permission: 'relatorioRisco' },
                         { label: 'Relatórios de Plantio', icon: 'fas fa-chart-bar', target: 'relatorioPlantio', permission: 'relatorioPlantio' },
                         { label: 'Relatório Climatológico', icon: 'fas fa-file-pdf', target: 'relatorioClima', permission: 'relatorioClima' },
-                        { label: 'Relatório de Blocos', icon: 'fas fa-cubes', target: 'relatorioBlocos', permission: 'relatorioBlocos' },
                     ]
                 },
                 {
@@ -171,9 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             ],
             roles: {
-                admin: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, excluir: true, gerenciarUsuarios: true, configuracoes: true, cadastrarPessoas: true, syncHistory: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, relatorioBlocos: true },
-                supervisor: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, configuracoes: true, cadastrarPessoas: true, gerenciarUsuarios: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, relatorioBlocos: true },
-                tecnico: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, apontamentoPlantio: true, relatorioPlantio: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, relatorioBlocos: true },
+                admin: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, excluir: true, gerenciarUsuarios: true, configuracoes: true, cadastrarPessoas: true, syncHistory: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
+                supervisor: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, configuracoes: true, cadastrarPessoas: true, gerenciarUsuarios: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
+                tecnico: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, apontamentoPlantio: true, relatorioPlantio: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
                 colaborador: { dashboard: true, monitoramentoAereo: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
                 user: { dashboard: true }
             }
@@ -201,7 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
             companyLogo: null,
             activeSubmenu: null,
             charts: {},
-            blocks: [],
             harvestPlans: [],
             activeHarvestPlan: null,
             inactivityTimer: null,
@@ -231,8 +229,6 @@ document.addEventListener('DOMContentLoaded', () => {
             clima: [],
             apontamentoPlantioFormIsDirty: false,
             syncInterval: null,
-            selectionModeActive: false,
-            selectedPlotsForBlock: [],
         },
         
         elements: {
@@ -481,10 +477,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 talhaoDistancia: document.getElementById('talhaoDistancia'),
                 talhaoUltimaColheita: document.getElementById('talhaoUltimaColheita'),
                 btnSaveTalhao: document.getElementById('btnSaveTalhao'),
-                blockId: document.getElementById('blockId'),
-                blockName: document.getElementById('blockName'),
-                btnSaveBlock: document.getElementById('btnSaveBlock'),
-                blocksList: document.getElementById('blocksList'),
                 csvUploadArea: document.getElementById('csvUploadArea'),
                 csvFileInput: document.getElementById('csvFileInput'),
                 btnDownloadCsvTemplate: document.getElementById('btnDownloadCsvTemplate'),
@@ -652,8 +644,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 trapInfoBoxCloseBtn: document.getElementById('close-trap-info-box'),
                     mapFarmSearchInput: document.getElementById('map-farm-search-input'),
                     mapFarmSearchBtn: document.getElementById('map-farm-search-btn'),
-                    blockFilterSelect: document.getElementById('block-filter-select'),
-                    toggleSelectionModeBtn: document.getElementById('toggle-selection-mode-btn'),
             },
             relatorioPlantio: {
                 frente: document.getElementById('plantioRelatorioFrente'),
@@ -1303,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyId = App.state.currentUser.companyId;
                 const isSuperAdmin = App.state.currentUser.role === 'super-admin';
 
-                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima', 'blocks'];
+                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima'];
 
                 if (isSuperAdmin) {
                     // Super Admin ouve TODOS os dados de todas as coleções relevantes
@@ -1538,15 +1528,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         this.populateFrenteDePlantioSelect();
                         break;
-                    case 'blocks':
-                        if (activeTab === 'cadastros') {
-                            this.renderBlocksList();
-                        }
-                        if (activeTab === 'relatorioBlocos') {
-                            this.populateBlockReportSelect();
-                        }
-                        this.populateBlockFilter();
-                        break;
                     case 'apontamentosPlantio':
                         // This collection is for storing data, no direct render action needed on snapshot
                         break;
@@ -1603,7 +1584,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderWithCatch('renderPlanejamento', () => this.renderPlanejamento());
                 renderWithCatch('showHarvestPlanList', () => this.showHarvestPlanList());
                 renderWithCatch('populateHarvestPlanSelect', () => this.populateHarvestPlanSelect());
-                renderWithCatch('populateBlockReportSelect', () => this.populateBlockReportSelect());
 
                 renderWithCatch('dashboard-view', () => {
                     if (document.getElementById('dashboard').classList.contains('active')) {
@@ -1611,18 +1591,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
             },
-
-            populateBlockReportSelect() {
-                const select = document.getElementById('blockRelatorioSelect');
-                if (!select) return;
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Selecione um bloco...</option>';
-                App.state.blocks.sort((a, b) => a.name.localeCompare(b.name)).forEach(block => {
-                    select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
-                });
-                select.value = currentValue;
-            },
-
             showLoginMessage(message) { App.elements.loginMessage.textContent = message; },
             showAlert(message, type = 'success', duration = 3000) {
                 const { alertContainer } = App.elements;
@@ -2298,33 +2266,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     App.elements.cadastros.talhaoManagementContainer.style.display = 'none';
                 }
             },
-            renderBlocksList() {
-                const { blocksList } = App.elements.cadastros;
-                blocksList.innerHTML = '';
-                if (App.state.blocks.length === 0) {
-                    blocksList.innerHTML = '<p>Nenhum bloco cadastrado.</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.id = 'blocksTable';
-                table.className = 'harvestPlanTable'; // Reusing style
-                table.innerHTML = `<thead><tr><th>Nome do Bloco</th><th>Ações</th></tr></thead><tbody></tbody>`;
-                const tbody = table.querySelector('tbody');
-                App.state.blocks.sort((a, b) => a.name.localeCompare(b.name)).forEach(block => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td data-label="Nome">${block.name}</td>
-                        <td data-label="Ações">
-                            <div style="display: flex; justify-content: flex-end; gap: 5px;">
-                                <button class="btn-excluir" style="background:var(--color-info)" data-action="edit-block" data-id="${block.id}"><i class="fas fa-edit"></i></button>
-                                <button class="btn-excluir" data-action="delete-block" data-id="${block.id}"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    `;
-                });
-                blocksList.appendChild(table);
-            },
-
             renderTalhaoList(farmId) {
                 const { talhaoList, talhaoManagementContainer, selectedFarmName, selectedFarmTypes } = App.elements.cadastros;
                 const farm = App.state.fazendas.find(f => f.id === farmId);
@@ -3948,14 +3889,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (App.elements.cadastros.btnDownloadCsvTemplate) App.elements.cadastros.btnDownloadCsvTemplate.addEventListener('click', () => App.actions.downloadCsvTemplate());
                 if (App.elements.cadastros.talhaoArea) App.elements.cadastros.talhaoArea.addEventListener('input', App.actions.calculateTalhaoProducao);
                 if (App.elements.cadastros.talhaoTCH) App.elements.cadastros.talhaoTCH.addEventListener('input', App.actions.calculateTalhaoProducao);
-                if (App.elements.cadastros.btnSaveBlock) App.elements.cadastros.btnSaveBlock.addEventListener('click', () => App.actions.saveBlock());
-                if (App.elements.cadastros.blocksList) App.elements.cadastros.blocksList.addEventListener('click', e => {
-                    const btn = e.target.closest('button[data-action]');
-                    if(!btn) return;
-                    const { action, id } = btn.dataset;
-                    if(action === 'edit-block') App.actions.editBlock(id);
-                    if(action === 'delete-block') App.actions.deleteBlock(id);
-                });
                 
                 const editFarmModalEls = App.elements.editFarmModal;
                 if (editFarmModalEls.closeBtn) editFarmModalEls.closeBtn.addEventListener('click', () => this.closeEditFarmModal());
@@ -4320,11 +4253,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (relatorioRiscoEls.btnPDF) relatorioRiscoEls.btnPDF.addEventListener('click', () => App.reports.generateRiskViewPDF());
                 if (relatorioRiscoEls.btnExcel) relatorioRiscoEls.btnExcel.addEventListener('click', () => App.reports.generateRiskViewCSV());
 
-                const btnPDFBlocos = document.getElementById('btnPDFBlocos');
-                if (btnPDFBlocos) {
-                    btnPDFBlocos.addEventListener('click', () => App.reports.generateBlockReportPDF());
-                }
-
 
                 this.enableEnterKeyNavigation('#changePasswordModal');
                 this.enableEnterKeyNavigation('#cadastros');
@@ -4355,14 +4283,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (App.elements.monitoramentoAereo.btnHistory) {
                     // This listener is now attached in showTab
                 }
-
-            if (App.elements.monitoramentoAereo.blockFilterSelect) {
-                App.elements.monitoramentoAereo.blockFilterSelect.addEventListener('change', (e) => this.filterMapByBlock(e.target.value));
-            }
-
-            if (App.elements.monitoramentoAereo.toggleSelectionModeBtn) {
-                App.elements.monitoramentoAereo.toggleSelectionModeBtn.addEventListener('click', () => this.toggleSelectionMode());
-            }
 
                 const syncHistoryModal = App.elements.syncHistoryDetailModal;
                 if (syncHistoryModal.overlay) syncHistoryModal.overlay.addEventListener('click', e => { if (e.target === syncHistoryModal.overlay) this.hideSyncHistoryDetailModal(); });
@@ -4473,113 +4393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }
-            },
-
-            populateBlockFilter() {
-                const select = App.elements.monitoramentoAereo.blockFilterSelect;
-                if (!select) return;
-                const currentValue = select.value;
-                select.innerHTML = '<option value="all">Todos os Blocos</option>';
-                App.state.blocks.forEach(block => {
-                    select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
-                });
-                select.value = currentValue;
-            },
-
-            toggleSelectionMode() {
-                App.state.selectionModeActive = !App.state.selectionModeActive;
-                const btn = App.elements.monitoramentoAereo.toggleSelectionModeBtn;
-                const blockSelect = App.elements.monitoramentoAereo.blockFilterSelect;
-
-                if (App.state.selectionModeActive) {
-                    btn.innerHTML = '<i class="fas fa-save"></i> Salvar Bloco';
-                    btn.classList.add('active');
-                    blockSelect.value = 'all';
-                    this.filterMapByBlock('all');
-                    App.state.selectedPlotsForBlock = [];
-                    App.ui.showAlert('Modo de seleção ativado. Clique nos talhões para adicioná-los ao bloco.', 'info');
-                } else {
-                    btn.innerHTML = '<i class="fas fa-edit"></i> Editar Blocos';
-                    btn.classList.remove('active');
-                    if (App.state.selectedPlotsForBlock.length > 0) {
-                        this.promptSaveSelectionToBlock();
-                    }
-                }
-            },
-
-            promptSaveSelectionToBlock() {
-                const blockOptions = App.state.blocks.map(b => ({ value: b.id, text: b.name }));
-                blockOptions.unshift({ value: 'new', text: 'Criar Novo Bloco...' });
-
-                App.ui.showConfirmationModal(
-                    `Selecione um bloco para associar os ${App.state.selectedPlotsForBlock.length} talhões selecionados.`,
-                    async (results) => {
-                        const blockId = results.blockSelect;
-                        if (blockId === 'new') {
-                            // Logic to create a new block will be handled by another modal
-                            this.promptCreateNewBlockWithSelection();
-                        } else if (blockId) {
-                            // Logic to add to an existing block
-                            App.mapModule.addSelectedPlotsToBlock(blockId);
-                        }
-                    },
-                    [{
-                        type: 'select',
-                        id: 'blockSelect',
-                        label: 'Selecione o Bloco de Destino',
-                        options: blockOptions,
-                        required: true
-                    }]
-                );
-            },
-
-            promptCreateNewBlockWithSelection() {
-                App.ui.showConfirmationModal(
-                    'Digite o nome para o novo bloco que conterá os talhões selecionados.',
-                    async (results) => {
-                        const newBlockName = results.newBlockNameInput;
-                        if (!newBlockName) {
-                            App.ui.showAlert("O nome do novo bloco não pode ser vazio.", "error");
-                            return;
-                        }
-                        await App.mapModule.createNewBlockWithSelectedPlots(newBlockName);
-                    },
-                    [{
-                        type: 'text',
-                        id: 'newBlockNameInput',
-                        placeholder: 'Ex: Bloco Safra 25/26',
-                        required: true
-                    }]
-                );
-            },
-
-            filterMapByBlock(blockId) {
-                const map = App.state.mapboxMap;
-                if (!map || !map.getSource('talhoes-source')) return;
-
-                if (blockId === 'all') {
-                    map.setFilter('talhoes-layer', null);
-                    map.setFilter('talhoes-labels', null);
-                } else {
-                    const block = App.state.blocks.find(b => b.id === blockId);
-                    if (block && block.plots) {
-                        // 'plots' is an array of { farmCode, plotName }
-                        const filter = ['any'];
-                        block.plots.forEach(plot => {
-                            filter.push(['all',
-                                ['==', ['get', 'AGV_FUNDO'], String(plot.farmCode)],
-                                ['==', ['get', 'AGV_TALHAO'], String(plot.plotName)]
-                            ]);
-                        });
-                        map.setFilter('talhoes-layer', filter);
-                        map.setFilter('talhoes-labels', filter);
-                    } else {
-                        // If block has no plots, show nothing
-                        map.setFilter('talhoes-layer', ['==', ['get', 'AGV_FUNDO'], '']);
-                        map.setFilter('talhoes-labels', ['==', ['get', 'AGV_FUNDO'], '']);
-                    }
-                }
-            },
+            }
         },
         
         actions: {
@@ -7547,100 +7361,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 App.ui.hideImpersonationBanner();
             },
 
-            async saveBlock() {
-                const { blockId, blockName } = App.elements.cadastros;
-                const name = blockName.value.trim();
-                if (!name) { App.ui.showAlert("O nome do bloco é obrigatório.", "error"); return; }
-
-                const existingId = blockId.value;
-
-                let targetCompanyId = App.state.currentUser.companyId;
-                if (App.state.currentUser.role === 'super-admin') {
-                    targetCompanyId = App.elements.cadastros.adminTargetCompanyFarms.value;
-                    if (!targetCompanyId) {
-                        App.ui.showAlert("Como Super Admin, você deve selecionar uma empresa alvo para criar o bloco.", "error");
-                        return;
-                    }
-                }
-
-                const data = {
-                    name,
-                    companyId: targetCompanyId,
-                    plots: [] // Initialize with empty plots
-                };
-
-                const confirmationMessage = existingId
-                    ? `Tem a certeza que deseja atualizar o bloco "${name}"?`
-                    : `Tem a certeza que deseja guardar o novo bloco "${name}"?`;
-
-                App.ui.showConfirmationModal(confirmationMessage, async () => {
-                    App.ui.setLoading(true, "A guardar bloco...");
-                    try {
-                        const response = await fetch(`${App.config.backendUrl}/api/blocks${existingId ? `/${existingId}` : ''}`, {
-                            method: existingId ? 'PUT' : 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(data),
-                        });
-
-                        if (!response.ok) {
-                            const errorResult = await response.json();
-                            throw new Error(errorResult.message || 'Falha ao salvar o bloco');
-                        }
-
-                        const result = await response.json();
-                        App.ui.showAlert(result.message, 'success');
-
-                        blockId.value = '';
-                        blockName.value = '';
-                        // The listener will auto-refresh the list
-                    } catch (error) {
-                        console.error("Erro ao guardar bloco:", error);
-                        App.ui.showAlert(`Erro ao guardar bloco: ${error.message}.`, "error");
-                    } finally {
-                        App.ui.setLoading(false);
-                    }
-                });
-            },
-
-            editBlock(blockIdValue) {
-                const { blockId, blockName } = App.elements.cadastros;
-                const block = App.state.blocks.find(b => b.id === blockIdValue);
-                if (block) {
-                    blockId.value = block.id;
-                    blockName.value = block.name;
-                    blockName.focus();
-                }
-            },
-
-            deleteBlock(blockId) {
-                const block = App.state.blocks.find(b => b.id === blockId);
-                if (!block) return;
-                App.ui.showConfirmationModal(`Tem a certeza que deseja excluir o bloco "${block.name}"?`, async () => {
-                    App.ui.setLoading(true, "A excluir bloco...");
-                    try {
-                        const response = await fetch(`${App.config.backendUrl}/api/blocks/${blockId}`, {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                             body: JSON.stringify({ companyId: App.state.currentUser.companyId }),
-                        });
-
-                        if (!response.ok) {
-                            const errorResult = await response.json();
-                            throw new Error(errorResult.message || 'Falha ao excluir o bloco');
-                        }
-
-                        const result = await response.json();
-                        App.ui.showAlert(result.message, 'info');
-                        // The listener will auto-refresh the list
-                    } catch (error) {
-                        App.ui.showAlert(`Erro ao excluir o bloco: ${error.message}`, 'error');
-                        console.error(error);
-                    } finally {
-                        App.ui.setLoading(false);
-                    }
-                });
-            },
-
             async saveGlobalFeatures() {
                 const grid = document.getElementById('globalFeaturesGrid');
                 if (!grid) {
@@ -8537,28 +8257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (e.features.length === 0) return;
                     const clickedFeature = e.features[0];
                     const userMarker = App.state.mapboxUserMarker;
-
-                    if (App.state.selectionModeActive) {
-                        const farmCode = this._findProp(clickedFeature, ['FUNDO_AGR']);
-                        const plotName = this._findProp(clickedFeature, ['CD_TALHAO', 'COD_TALHAO', 'TALHAO']);
-                        const plotIdentifier = { farmCode, plotName };
-
-                        const selectedIndex = App.state.selectedPlotsForBlock.findIndex(
-                            p => p.farmCode === farmCode && p.plotName === plotName
-                        );
-
-                        if (selectedIndex > -1) {
-                            // Deselect
-                            App.state.selectedPlotsForBlock.splice(selectedIndex, 1);
-                            map.setFeatureState({ source: sourceId, id: clickedFeature.id }, { selected: false });
-                        } else {
-                            // Select
-                            App.state.selectedPlotsForBlock.push(plotIdentifier);
-                            map.setFeatureState({ source: sourceId, id: clickedFeature.id }, { selected: true });
-                        }
-                        return; // Stop further processing in selection mode
-                    }
-
 
                     if (App.state.trapPlacementMode === 'manual_select') {
                         // Não instala diretamente. Mostra um modal de confirmação primeiro.
@@ -9547,86 +9245,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     searchContainer.classList.remove('active');
                     searchBtnIcon.className = 'fas fa-search';
                     searchInput.value = '';
-                }
-            },
-
-            async addSelectedPlotsToBlock(blockId) {
-                const block = App.state.blocks.find(b => b.id === blockId);
-                if (!block) {
-                    App.ui.showAlert("Bloco de destino não encontrado.", "error");
-                    return;
-                }
-
-                // Merge without duplicates
-                const existingPlots = new Set(block.plots.map(p => `${p.farmCode}-${p.plotName}`));
-                const newPlots = App.state.selectedPlotsForBlock.filter(p => !existingPlots.has(`${p.farmCode}-${p.plotName}`));
-
-                if (newPlots.length === 0) {
-                    App.ui.showAlert("Todos os talhões selecionados já estão neste bloco.", "info");
-                    return;
-                }
-
-                const updatedPlots = [...block.plots, ...newPlots];
-
-                try {
-                    const response = await fetch(`${App.config.backendUrl}/api/blocks/${blockId}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: block.name, plots: updatedPlots, companyId: block.companyId }),
-                    });
-
-                    if (!response.ok) throw new Error('Falha ao atualizar o bloco.');
-
-                    App.ui.showAlert(`${newPlots.length} talhões adicionados ao bloco "${block.name}" com sucesso!`, 'success');
-                } catch (error) {
-                    App.ui.showAlert(error.message, 'error');
-                } finally {
-                    this.clearSelectionMode();
-                }
-            },
-
-            async createNewBlockWithSelectedPlots(newBlockName) {
-                const newBlock = {
-                    name: newBlockName,
-                    plots: App.state.selectedPlotsForBlock,
-                    companyId: App.state.currentUser.companyId,
-                };
-
-                try {
-                    const response = await fetch(`${App.config.backendUrl}/api/blocks`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(newBlock),
-                    });
-
-                    if (!response.ok) throw new Error('Falha ao criar o novo bloco.');
-
-                    App.ui.showAlert(`Novo bloco "${newBlockName}" criado com os talhões selecionados!`, 'success');
-                } catch (error) {
-                    App.ui.showAlert(error.message, 'error');
-                } finally {
-                    this.clearSelectionMode();
-                }
-            },
-
-            clearSelectionMode() {
-                // Reset state
-                App.state.selectionModeActive = false;
-                App.state.selectedPlotsForBlock = [];
-
-                // Reset UI
-                const btn = App.elements.monitoramentoAereo.toggleSelectionModeBtn;
-                btn.innerHTML = '<i class="fas fa-edit"></i> Editar Blocos';
-                btn.classList.remove('active');
-
-                // Clear visual selection from map
-                const map = App.state.mapboxMap;
-                if (map && map.getSource('talhoes-source')) {
-                    // This is a bit heavy, but ensures all selections are cleared
-                    const allFeatures = map.querySourceFeatures('talhoes-source');
-                    allFeatures.forEach(feature => {
-                        map.setFeatureState({ source: 'talhoes-source', id: feature.id }, { selected: false });
-                    });
                 }
             },
 
@@ -11695,20 +11313,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     riskOnly: riskOnlyCheckbox ? riskOnlyCheckbox.checked : false
                 };
                 this._fetchAndDownloadReport('risk-view/csv', filters, 'relatorio_de_risco.csv');
-            },
-
-            generateBlockReportPDF() {
-                const blockSelect = document.getElementById('blockRelatorioSelect');
-                const blockId = blockSelect.value;
-
-                if (!blockId) {
-                    App.ui.showAlert("Por favor, selecione um bloco para gerar o relatório.", "warning");
-                    return;
-                }
-                const filters = {
-                    blockId: blockId,
-                };
-                this._fetchAndDownloadReport('block/pdf', filters, `relatorio_bloco_${blockSelect.options[blockSelect.selectedIndex].text}.pdf`);
             },
         },
 
