@@ -2459,6 +2459,20 @@
                 </div>
             </section>
 
+            <section id="relatorioBloco" class="tab-content card" aria-label="Relatório de Bloco" tabindex="0" hidden>
+                <h2><i class="fas fa-th-large"></i> Relatório de Bloco</h2>
+                <p style="margin-top: -15px; margin-bottom: 20px; color: var(--color-text-light);">Gere um relatório em PDF com a visualização de um bloco de fazendas.</p>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="blocoRelatorioSelect" class="required">Selecione o Bloco:</label>
+                        <select id="blocoRelatorioSelect" required></select>
+                    </div>
+                </div>
+                <div class="botoes-relatorio">
+                    <button id="btnPDFBloco" type="button"><i class="fas fa-file-pdf"></i> Gerar Relatório (PDF)</button>
+                </div>
+            </section>
+
             <section id="lancamentoPerda" class="tab-content card" aria-label="Lançamento Perda" tabindex="0" hidden>
                 <h2><i class="fas fa-dollar-sign"></i> Lançamento Perda</h2>
                 <div class="form-row">
@@ -3189,7 +3203,36 @@
                     <button id="btnAddTrap" class="map-control-btn" title="Adicionar Armadilha no Local Atual">
                         <i class="fas fa-plus"></i>
                     </button>
+                    <button id="btnBlockMode" class="map-control-btn" title="Ativar Modo Bloco">
+                        <i class="fas fa-th-large"></i>
+                    </button>
                 </div>
+
+                <div id="block-editor-box" class="info-box">
+                    <button id="close-block-editor-box" class="modal-close-btn">&times;</button>
+                    <div class="info-title">
+                        <i class="fas fa-th-large"></i>
+                        <span>Editor de Blocos</span>
+                    </div>
+                    <div id="block-editor-content" style="padding: 15px;">
+                        <div class="form-col">
+                            <label for="blockSelector">Visualizar/Editar Bloco:</label>
+                            <select id="blockSelector">
+                                <option value="">Novo Bloco</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                             <label for="blockName">Nome do Bloco (Ex: 1, 2, 3):</label>
+                             <input type="text" id="blockName" placeholder="Digite o nome do bloco">
+                        </div>
+                        <p id="selected-talhoes-count" style="margin-top: 10px; font-weight: 500;">Talhões selecionados: 0</p>
+                        <div class="botoes-relatorio" style="margin-top: 15px;">
+                            <button id="btnSaveBlock" class="save"><i class="fas fa-save"></i> Guardar Bloco</button>
+                            <button id="btnDeleteBlock" class="btn-excluir" style="background-color: var(--color-danger);"><i class="fas fa-trash"></i> Excluir Bloco</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="talhao-info-box" class="info-box">
                     <button id="close-info-box" class="modal-close-btn">&times;</button>
                     <div id="talhao-info-box-content"></div>
