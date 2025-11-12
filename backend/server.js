@@ -14,6 +14,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const csv = require('csv-parser');
 const { Readable } = require('stream');
 const xlsx = require('xlsx');
+const turf = require('@turf/turf');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -3200,6 +3201,191 @@ try {
         }
     });
 
+    app.get('/reports/ordem-servico/pdf', async (req, res) => {
+        // Usamos 'layout: portrait' (retrato) para o mapa da O.S.
+        const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'portrait', bufferPages: true });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename=mapa_ordem_servico.pdf');
+        doc.pipe(res);
+        try {
+            const { osId, companyId, generatedBy } = req.query;
+
+            // 1. Validação de Segurança e Busca de Dados
+            if (!osId || !companyId) {
+                throw new Error('ID da O.S. e ID da Empresa são obrigatórios.');
+            }
+
+            const osDoc = await db.collection('ordensDeServico').doc(osId).get();
+            if (!osDoc.exists || osDoc.data().companyId !== companyId) {
+                throw new Error('Ordem de Serviço não encontrada ou não pertence a esta empresa.');
+            }
+            const osData = osDoc.data();
+
+            const farmDoc = await db.collection('fazendas').doc(osData.idFazenda).get();
+            if (!farmDoc.exists) {
+                throw new Error('Fazenda associada à O.S. não encontrada.');
+            }
+            const farmData = farmDoc.data();
+
+            const geojsonData = await getShapefileData(companyId);
+            if (!geojsonData) {
+                throw new Error('Dados de Shapefile (mapa) não encontrados para esta empresa.');
+            }
+
+            // 2. Filtrar Features do Shapefile
+            const farmFeatures = geojsonData.features.filter(feature => {
+                if (!feature || !feature.properties) return false;
+                // Usamos a função auxiliar que já existe no seu server.js
+                const fundoAgricola = findShapefileProp(feature.properties, ['FUNDO_AGR']);
+                return String(fundoAgricola).trim() === String(farmData.code).trim();
+            });
+
+            if (farmFeatures.length === 0) {
+                throw new Error(`Nenhum talhão encontrado no Shapefile para a Fazenda ${farmData.code}.`);
+            }
+
+            const selectedFeatures = farmFeatures.filter(feature => {
+                const talhaoNome = findShapefileProp(feature.properties, ['CD_TALHAO', 'COD_TALHAO', 'TALHAO']);
+                return osData.talhoesSelecionados.includes(talhaoNome);
+            });
+
+            // 3. Iniciar Geração do PDF
+            const title = `Mapa da Ordem de Serviço: ${osId}`;
+            let currentY = await generatePdfHeader(doc, title, companyId);
+
+            // Adicionar Detalhes da O.S.
+            doc.fontSize(10).font('Helvetica-Bold').text('O.S. ID:', 30, currentY);
+            doc.font('Helvetica').text(osId, 100, currentY);
+
+            doc.font('Helvetica-Bold').text('Data:', 200, currentY);
+            doc.font('Helvetica').text(osData.data, 240, currentY);
+
+            doc.font('Helvetica-Bold').text('Fazenda:', 350, currentY);
+            doc.font('Helvetica').text(osData.nomeFazenda, 400, currentY);
+            currentY = doc.y + 5;
+
+            doc.font('Helvetica-Bold').text('Serviço:', 30, currentY);
+            doc.font('Helvetica').text(osData.tipoServico, 100, currentY);
+
+            doc.font('Helvetica-Bold').text('Responsável:', 200, currentY);
+            doc.font('Helvetica').text(osData.nomeResponsavel, 270, currentY);
+            currentY = doc.y + 15;
+
+            // 4. Calcular Bounding Box e Escala do Mapa
+            const allCoords = farmFeatures.flatMap(f => f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates.flatMap(p => p[0]));
+            const bbox = {
+                minX: Math.min(...allCoords.map(c => c[0])),
+                maxX: Math.max(...allCoords.map(c => c[0])),
+                minY: Math.min(...allCoords.map(c => c[1])),
+                maxY: Math.max(...allCoords.map(c => c[1])),
+            };
+
+            const mapMargin = 30;
+            const mapAreaWidth = doc.page.width - (mapMargin * 2);
+            const mapAreaHeight = doc.page.height - currentY - doc.page.margins.bottom - 20; // 20 para espaço do rodapé
+
+            const scaleX = mapAreaWidth / (bbox.maxX - bbox.minX);
+            const scaleY = mapAreaHeight / (bbox.maxY - bbox.minY);
+            const scale = Math.min(scaleX, scaleY) * 0.95; // 95% de zoom para ter uma margem interna
+
+            const mapWidth = (bbox.maxX - bbox.minX) * scale;
+            const mapHeight = (bbox.maxY - bbox.minY) * scale;
+
+            const offsetX = mapMargin + (mapAreaWidth - mapWidth) / 2;
+            const offsetY = currentY + (mapAreaHeight - mapHeight) / 2;
+
+            const transformCoord = (coord) => [
+                (coord[0] - bbox.minX) * scale + offsetX,
+                (bbox.maxY - coord[1]) * scale + offsetY
+            ];
+
+            // 5. Desenhar o Mapa
+            doc.save();
+            doc.lineWidth(0.5).strokeColor('#333');
+
+            // Desenha todos os talhões da fazenda (em cinza)
+            doc.fillColor('#E0E0E0'); // Cinza claro
+            farmFeatures.forEach(feature => {
+                const polygons = feature.geometry.type === 'Polygon' ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+                polygons.forEach(polygon => {
+                    try {
+                        const path = polygon[0];
+                        const firstPoint = transformCoord(path[0]);
+                        doc.moveTo(firstPoint[0], firstPoint[1]);
+                        for (let i = 1; i < path.length; i++) {
+                            doc.lineTo(...transformCoord(path[i]));
+                        }
+                        doc.fillAndStroke();
+                    } catch (e) {
+                        console.error("Erro ao desenhar polígono (geral):", e);
+                    }
+                });
+            });
+
+            // "Pinta" os talhões selecionados (em verde)
+            doc.fillColor('#2e7d32'); // Verde AgroVetor
+            selectedFeatures.forEach(feature => {
+                const polygons = feature.geometry.type === 'Polygon' ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+                polygons.forEach(polygon => {
+                    try {
+                        const path = polygon[0];
+                        const firstPoint = transformCoord(path[0]);
+                        doc.moveTo(firstPoint[0], firstPoint[1]);
+                        for (let i = 1; i < path.length; i++) {
+                            doc.lineTo(...transformCoord(path[i]));
+                        }
+                        doc.fillAndStroke();
+                    } catch (e) {
+                        console.error("Erro ao desenhar polígono (selecionado):", e);
+                    }
+                });
+            });
+
+            // Adiciona os rótulos (labels) apenas dos talhões selecionados
+            doc.fillColor('#000000').fontSize(8).font('Helvetica-Bold');
+            selectedFeatures.forEach(feature => {
+                try {
+                    // Pega o centroide (ponto central) do polígono para posicionar o texto
+                    const center = turf.centerOfMass(feature).geometry.coordinates;
+                    const [textX, textY] = transformCoord(center);
+                    const talhaoNome = findShapefileProp(feature.properties, ['CD_TALHAO', 'COD_TALHAO', 'TALHAO']);
+
+                    // Adiciona um "halo" branco para legibilidade
+                    doc.fillColor('#FFFFFF').text(talhaoNome, textX - 1, textY - 1, { align: 'center', width: 50 });
+                    doc.fillColor('#FFFFFF').text(talhaoNome, textX + 1, textY - 1, { align: 'center', width: 50 });
+                    doc.fillColor('#FFFFFF').text(talhaoNome, textX - 1, textY + 1, { align: 'center', width: 50 });
+                    doc.fillColor('#FFFFFF').text(talhaoNome, textX + 1, textY + 1, { align: 'center', width: 50 });
+
+                    // Texto principal
+                    doc.fillColor('#000000').text(talhaoNome, textX, textY, { align: 'center', width: 50 });
+                } catch (e) {
+                    console.error("Erro ao desenhar rótulo do talhão:", e);
+                }
+            });
+
+            doc.restore();
+
+            // 6. Finalizar
+            generatePdfFooter(doc, generatedBy);
+            doc.end();
+
+        } catch (error) {
+            console.error("Erro ao gerar PDF da Ordem de Serviço:", error);
+            if (!res.headersSent) {
+                // Se nenhum dado foi enviado ainda, envia um PDF de erro
+                const errorDoc = new PDFDocument();
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', 'attachment; filename=erro_relatorio.pdf');
+                errorDoc.pipe(res);
+                errorDoc.fontSize(12).text('Ocorreu um erro ao gerar o relatório PDF:', 50, 50);
+                errorDoc.fontSize(10).fillColor('red').text(error.message, 50, 70);
+                errorDoc.end();
+            } else {
+                doc.end(); // Apenas encerra o stream se o cabeçalho já foi enviado
+            }
+        }
+
+    });
 } catch (error) {
     console.error("ERRO CRÍTICO AO INICIALIZAR FIREBASE:", error);
     app.use((req, res) => res.status(500).send('Erro de configuração do servidor.'));

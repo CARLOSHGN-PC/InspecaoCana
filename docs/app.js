@@ -167,12 +167,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     submenu: [
                         { label: 'Gerir Empresas', icon: 'fas fa-building', target: 'gerenciarEmpresas', permission: 'superAdmin' },
                     ]
-                }
+                },
+                {
+                    label: 'Ordem de Serviço', icon: 'fas fa-clipboard-list',
+                    submenu: [
+                        { label: 'Criar O.S.', icon: 'fas fa-plus', target: 'ordemServico', permission: 'criarOrdemServico' },
+                        { label: 'Relatório O.S.', icon: 'fas fa-file-pdf', target: 'relatorioOrdemServico', permission: 'relatorioOrdemServico' }
+                    ]
+                },
             ],
             roles: {
-                admin: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, excluir: true, gerenciarUsuarios: true, configuracoes: true, cadastrarPessoas: true, syncHistory: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
-                supervisor: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, configuracoes: true, cadastrarPessoas: true, gerenciarUsuarios: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
-                tecnico: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, apontamentoPlantio: true, relatorioPlantio: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
+                admin: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, excluir: true, gerenciarUsuarios: true, configuracoes: true, cadastrarPessoas: true, syncHistory: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, criarOrdemServico: true, relatorioOrdemServico: true },
+                supervisor: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, planejamentoColheita: true, planejamento: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, configuracoes: true, cadastrarPessoas: true, gerenciarUsuarios: true, frenteDePlantio: true, apontamentoPlantio: true, relatorioPlantio: true, gerenciarLancamentos: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, criarOrdemServico: true, relatorioOrdemServico: true },
+                tecnico: { dashboard: true, monitoramentoAereo: true, relatorioMonitoramento: true, relatorioRisco: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoCigarrinha: true, relatorioBroca: true, relatorioPerda: true, relatorioCigarrinha: true, lancamentoCigarrinhaPonto: true, relatorioCigarrinhaPonto: true, lancamentoCigarrinhaAmostragem: true, relatorioCigarrinhaAmostragem: true, apontamentoPlantio: true, relatorioPlantio: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true, criarOrdemServico: true, relatorioOrdemServico: true },
                 colaborador: { dashboard: true, monitoramentoAereo: true, lancamentoBroca: true, lancamentoPerda: true, lancamentoClima: true, dashboardClima: true, relatorioClima: true },
                 user: { dashboard: true }
             }
@@ -229,6 +236,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clima: [],
             apontamentoPlantioFormIsDirty: false,
             syncInterval: null,
+            ordensDeServico: [],
+            osMap: null,
+            osMapLoaded: false,
+            osSelectedTalhaoIds: new Set(),
+            osCurrentFazendaId: null,
+            osMapClickListener: null,
         },
         
         elements: {
@@ -698,6 +711,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmBtn: document.getElementById('trapPlacementModalConfirmBtn'),
             },
             installAppBtn: document.getElementById('installAppBtn'),
+            ordemServico: {
+                form: document.getElementById('formOrdemServico'),
+                entryId: document.getElementById('osEntryId'),
+                data: document.getElementById('osData'),
+                tipo: document.getElementById('osTipo'),
+                responsavel: document.getElementById('osResponsavel'),
+                fazenda: document.getElementById('osFazenda'),
+                mapContainer: document.getElementById('osMapContainer'),
+                selectedTalhoesList: document.getElementById('osSelectedTalhoesList'),
+                btnSave: document.getElementById('btnSaveOS')
+            },
+            relatorioOrdemServico: {
+                filtroInicio: document.getElementById('osRelatorioInicio'),
+                filtroFim: document.getElementById('osRelatorioFim'),
+                filtroOS: document.getElementById('osRelatorioFiltroOS'),
+                btnBuscar: document.getElementById('btnBuscarOS'),
+                lista: document.getElementById('osRelatorioLista')
+            },
         },
 
         isFeatureGloballyActive(featureKey) {
@@ -1293,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyId = App.state.currentUser.companyId;
                 const isSuperAdmin = App.state.currentUser.role === 'super-admin';
 
-                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima'];
+                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima', 'ordensDeServico'];
 
                 if (isSuperAdmin) {
                     // Super Admin ouve TODOS os dados de todas as coleções relevantes
@@ -1557,6 +1588,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         if (activeTab === 'excluirDados') {
                             this.renderExclusao();
                         }
+                        break;
+                    case 'ordensDeServico':
+                        if (activeTab === 'relatorioOrdemServico') {
+                            App.ordemServico.renderRelatorioLista();
+                        }
+                        App.ui.populateUserSelects([App.elements.ordemServico.responsavel]);
                         break;
                     // No specific actions needed for 'cigarrinha' or 'armadilhas' on snapshot,
                     // as their primary UIs are user-triggered or handled elsewhere.
@@ -1947,6 +1984,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (id === 'relatorioColheitaCustom') this.populateHarvestPlanSelect();
                 if (['lancamentoBroca', 'lancamentoPerda', 'lancamentoCigarrinha', 'apontamentoPlantio'].includes(id)) this.setDefaultDatesForEntryForms();
                 
+                if (id === 'ordemServico') {
+                    App.ordemServico.initMap();
+                    App.elements.ordemServico.data.value = new Date().toISOString().split('T')[0];
+                    App.ui.populateUserSelects([App.elements.ordemServico.responsavel]);
+                    App.ui.populateFazendaSelects();
+                }
+                if (id === 'relatorioOrdemServico') {
+                    App.ordemServico.renderRelatorioLista();
+                }
+                if (currentActiveTab && currentActiveTab.id === 'ordemServico' && id !== 'ordemServico') {
+                    App.ordemServico.destroyMap();
+                }
+
                 localStorage.setItem('agrovetor_lastActiveTab', id);
                 this.closeAllMenus();
             },
@@ -4393,6 +4443,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }
+
+                const osEls = App.elements.ordemServico;
+                if (osEls.btnSave) osEls.btnSave.addEventListener('click', () => App.ordemServico.saveOS());
+                if (osEls.fazenda) osEls.fazenda.addEventListener('change', (e) => App.ordemServico.loadFazendaOnMap(e.target.value));
+
+                const relOsEls = App.elements.relatorioOrdemServico;
+                if (relOsEls.btnBuscar) relOsEls.btnBuscar.addEventListener('click', () => App.ordemServico.renderRelatorioLista());
+                if (relOsEls.lista) relOsEls.lista.addEventListener('click', (e) => App.ordemServico.handleReportClick(e));
             }
         },
         
@@ -11313,6 +11371,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     riskOnly: riskOnlyCheckbox ? riskOnlyCheckbox.checked : false
                 };
                 this._fetchAndDownloadReport('risk-view/csv', filters, 'relatorio_de_risco.csv');
+            },
+
+            generateOrdemServicoPDF(osId) {
+                const filters = {
+                    osId: osId
+                };
+                this._fetchAndDownloadReport('ordem-servico/pdf', filters, `mapa_os_${osId}.pdf`);
             },
         },
 

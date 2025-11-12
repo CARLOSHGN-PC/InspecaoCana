@@ -3165,6 +3165,96 @@
                 </div>
             </section>
 
+<!-- SEÇÃO 1: Tela de Criação da Ordem de Serviço -->
+<section id="ordemServico" class="tab-content card" aria-label="Criar Ordem de Serviço" tabindex="0" hidden>
+<h2><i class="fas fa-clipboard-list"></i> Criar Ordem de Serviço</h2>
+<form id="formOrdemServico">
+    <div class="card" style="border-left-color: var(--color-purple);">
+        <h3><i class="fas fa-info-circle"></i> 1. Detalhes da O.S.</h3>
+        <input type="hidden" id="osEntryId">
+        <div class="form-row">
+            <div class="form-col">
+                <label for="osData" class="required">Data da O.S.:</label>
+                <input type="date" id="osData" required>
+            </div>
+            <div class="form-col">
+                <label for="osTipo" class="required">Tipo de Serviço:</label>
+                <select id="osTipo" required>
+                    <option value="">Selecione...</option>
+                    <option value="Pulverização">Pulverização</option>
+                    <option value="Plantio">Plantio</option>
+                    <option value="Colheita">Colheita</option>
+                    <option value="Adubação">Adubação</option>
+                    <option value="Manutenção">Manutenção</option>
+                    <option value="Outro">Outro</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-col">
+                <label for="osResponsavel" class="required">Responsável (Colaborador):</label>
+                <select id="osResponsavel" required>
+                    <option value="">Carregando...</option>
+                </select>
+            </div>
+            <div class="form-col">
+                <label for="osFazenda" class="required">Fazenda:</label>
+                <select id="osFazenda" required>
+                    <option value="">Selecione uma fazenda...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left-color: var(--color-purple); margin-top: 20px;">
+        <h3><i class="fas fa-map-marked-alt"></i> 2. Selecionar Talhões</h3>
+        <p>Clique nos talhões do mapa para adicionar ou remover da O.S.</p>
+       
+        <div id="osMapContainer" style="height: 450px; width: 100%; border-radius: var(--border-radius); margin-top: 15px; background-color: var(--color-bg);">
+            <!-- O Mapa da O.S. será carregado aqui -->
+        </div>
+
+        <div style="margin-top: 15px;">
+            <strong>Talhões Selecionados:</strong>
+            <div id="osSelectedTalhoesList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; font-size: 14px; min-height: 30px;">
+                <!-- Tags dos talhões selecionados -->
+                <span style="color: var(--color-text-light);">Nenhum talhão selecionado.</span>
+            </div>
+        </div>
+    </div>
+   
+    <button class="save" type="button" id="btnSaveOS" style="margin-top: 20px;"><i class="fas fa-save"></i> Salvar Ordem de Serviço</button>
+</form>
+
+</section>
+<!-- SEÇÃO 2: Tela de Relatório das Ordens de Serviço -->
+<section id="relatorioOrdemServico" class="tab-content card" aria-label="Relatório de Ordens de Serviço" tabindex="0" hidden>
+<h2><i class="fas fa-file-pdf"></i> Relatório de Ordens de Serviço</h2>
+<div class="card" style="border-left-color: var(--color-info);">
+    <h3><i class="fas fa-filter"></i> Filtros</h3>
+    <div class="form-row">
+        <div class="form-col">
+            <label for="osRelatorioInicio">Data Início:</label>
+            <input type="date" id="osRelatorioInicio">
+        </div>
+        <div class="form-col">
+            <label for="osRelatorioFim">Data Fim:</label>
+            <input type="date" id="osRelatorioFim">
+        </div>
+        <div class="form-col">
+            <label for="osRelatorioFiltroOS">Buscar por ID da O.S.:</label>
+            <input type="text" id="osRelatorioFiltroOS" placeholder="Digite o ID (ex: OS-12345)">
+        </div>
+    </div>
+    <button class="save" id="btnBuscarOS" style="max-width: 200px;"><i class="fas fa-search"></i> Buscar</button>
+</div>
+
+<h3><i class="fas fa-list-ul"></i> Ordens de Serviço Encontradas</h3>
+<div id="osRelatorioLista">
+    <!-- Lista de O.S. será renderizada aqui pelo JS -->
+</div>
+
+</section>
         </main>
         
         <div id="monitoramentoAereo-container" class="tab-content">
@@ -3486,6 +3576,7 @@
 
     <!-- Script principal da aplicação -->
     <script type="module" src="./app.js"></script>
+    <script type="module" src="./ordemServico.js"></script>
 
 </body>
 </html>
