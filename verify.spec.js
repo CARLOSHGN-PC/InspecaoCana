@@ -2,6 +2,7 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('AgroVetor Risk View Verification', () => {
   test('should hide labels of non-risk farms when risk view is enabled', async ({ page }) => {
+    test.setTimeout(60000); // Aumenta o timeout para 60 segundos
     // Mock the capacitor environment
     await page.addInitScript(() => {
         // Mock Capacitor

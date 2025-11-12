@@ -3152,6 +3152,34 @@
                 </form>
             </section>
 
+            <section id="gestaoBlocos" class="tab-content card" aria-label="Gestão de Blocos" tabindex="0" hidden>
+                <h2><i class="fas fa-cubes"></i> Gestão de Blocos</h2>
+                <div class="card" style="border-left-color: var(--color-purple);">
+                    <h3><i class="fas fa-plus-circle"></i> Novo Bloco</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="blockName" class="required">Nome do Bloco:</label>
+                            <input type="text" id="blockName" placeholder="Ex: Bloco 1">
+                        </div>
+                    </div>
+                    <button id="btnSaveBlock" class="save" style="max-width: 250px;"><i class="fas fa-plus-circle"></i> Criar Bloco</button>
+                </div>
+                <h3><i class="fas fa-list-ul"></i> Blocos Cadastrados</h3>
+                <div id="blockList" class="table-responsive"></div>
+            </section>
+
+            <section id="relatorioBlocos" class="tab-content card" aria-label="Relatório de Blocos" tabindex="0" hidden>
+                <h2><i class="fas fa-cubes"></i> Relatório de Blocos</h2>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="blockReportSelect" class="required">Selecione um Bloco:</label>
+                        <select id="blockReportSelect" required></select>
+                    </div>
+                </div>
+                <div id="block-report-map" style="width: 100%; height: 500px; margin-top: 20px;"></div>
+                <div id="block-report-legend" style="margin-top: 20px;"></div>
+            </section>
+
             <section id="relatorioClima" class="tab-content card" aria-label="Relatório Climatológico" tabindex="0" hidden>
                 <h2><i class="fas fa-file-pdf"></i> Relatório Climatológico</h2>
                 <div class="form-row">
@@ -3176,6 +3204,11 @@
                         <i class="fas fa-search"></i>
                     </button>
                 </div>
+                <div id="block-filter-container" style="position: absolute; top: 15px; right: 15px; z-index: 2; background: var(--color-surface); padding: 5px; border-radius: var(--border-radius); box-shadow: var(--shadow-lg);">
+                    <select id="blockFilter" style="margin: 0; border: none;">
+                        <option value="">Todos os Blocos</option>
+                    </select>
+                </div>
                 <div class="map-controls">
                     <button id="btnCenterMap" class="map-control-btn" title="Centralizar em Mim">
                         <i class="fas fa-location-arrow"></i>
@@ -3189,6 +3222,11 @@
                     <button id="btnAddTrap" class="map-control-btn" title="Adicionar Armadilha no Local Atual">
                         <i class="fas fa-plus"></i>
                     </button>
+                </div>
+                <div id="block-edit-controls" style="display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); z-index: 2; background: var(--color-surface); padding: 10px; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); display: flex; gap: 10px; align-items: center;">
+                    <h3 style="margin: 0; font-size: 16px;">Editando Bloco: <span id="editingBlockName"></span></h3>
+                    <button id="btnSaveBlockChanges" class="save" style="margin: 0; width: auto;"><i class="fas fa-save"></i> Salvar</button>
+                    <button id="btnCancelBlockEdit" class="btn-secondary" style="margin: 0; width: auto;"><i class="fas fa-times"></i> Cancelar</button>
                 </div>
                 <div id="talhao-info-box" class="info-box">
                     <button id="close-info-box" class="modal-close-btn">&times;</button>
@@ -3462,27 +3500,27 @@
     </div>
 
     <!-- Bibliotecas Externas -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script>
-    <script src="https://unpkg.com/idb@7.1.1/build/index.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> -->
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/shpjs@latest/dist/shp.js"></script> -->
+    <!-- <script src="https://unpkg.com/idb@7.1.1/build/index.js"></script> -->
     
     <!-- Mapbox GL JS -->
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js"></script>
+    <!-- <link href="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.css" rel="stylesheet"> -->
+    <!-- <script src="https://api.mapbox.com/mapbox-gl-js/v3.14.0/mapbox-gl.js"></script> -->
     <!-- Turf.js for spatial analysis -->
-    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script> -->
 
     <!-- Proj4.js for coordinate reprojection -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.min.js" integrity="sha512-Xc9+1uP2n/3/O/45gK/yHqj/t/fG0e/j/gP/b/2i2c/m3/d/Jg/a/f/H/V" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.11.0/proj4.min.js" integrity="sha512-Xc9+1uP2n/3/O/45gK/yHqj/t/fG0e/j/gP/b/2i2c/m3/d/Jg/a/f/H/V" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 
     <!-- Crypto-JS for hashing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js" integrity="sha512-E8QSvWZ0eCLGk4km3hxSsNmGWbLtSCSUcewDQPQWZF6pEU8GlT8a5fF32wOl1i8ftdMhssTrF/OhyGWwonTcXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 
     <!-- Capacitor script -->
-    <script src="capacitor.js"></script>
+    <!-- <script src="capacitor.js"></script> -->
 
     <!-- Script principal da aplicação -->
     <script type="module" src="./app.js"></script>
