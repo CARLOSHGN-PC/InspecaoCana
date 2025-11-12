@@ -8161,7 +8161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ['boolean', ['feature-state', 'selected'], false], themeColors.primary,
                                 ['boolean', ['feature-state', 'hover'], false], '#607D8B', // Lighter grey for hover
                                 ['boolean', ['feature-state', 'risk'], false], '#d32f2f', // Red for risk
-                                '#263238' // Even darker grey-blue as requested
+                                '#1C1C1C'
                             ],
                             'fill-opacity': [
                                 'case',
@@ -9041,6 +9041,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     map.setPaintProperty('talhoes-layer', 'fill-color', App.ui._getThemeColors().primary);
                     map.setPaintProperty('talhoes-layer', 'fill-opacity', defaultFillOpacity);
                     map.setPaintProperty('talhoes-border-layer', 'line-opacity', defaultLineOpacity);
+                    // Garante que todos os rótulos sejam exibidos ao desativar a visualização de risco
+                    map.setFilter('talhoes-labels', null);
                     this.loadTraps();
                     console.log("Risk view desativada. Revertendo para a visualização padrão.");
                     console.log("--- [END] calculateAndApplyRiskView ---");
@@ -9159,6 +9161,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             map.setFeatureState({ source: 'talhoes-source', id: id }, { risk: true });
                         });
                         map.riskFarmFeatureIds = featureIds;
+
+                        // Filtra os rótulos para mostrar apenas os das fazendas em risco
+                        const farmCodesInRiskAsStrings = Array.from(farmsInRisk).map(String);
+                        const labelFilter = ['in', ['trim', ['to-string', ['get', 'AGV_FUNDO']]], ['literal', farmCodesInRiskAsStrings]];
+                        map.setFilter('talhoes-labels', labelFilter);
+
+
                         App.ui.showAlert(`${farmsInRisk.size} fazenda(s) em risco foram destacadas.`, 'info');
                     } else {
                          // Isso pode acontecer se o código da fazenda em risco não corresponder a nenhuma feature do mapa
@@ -9168,6 +9177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         map.setPaintProperty('talhoes-layer', 'fill-color', App.ui._getThemeColors().primary);
                         map.setPaintProperty('talhoes-layer', 'fill-opacity', defaultFillOpacity);
                         map.setPaintProperty('talhoes-border-layer', 'line-opacity', defaultLineOpacity);
+                        map.setFilter('talhoes-labels', null); // Mostra todos os rótulos
                     }
 
                 } else {
@@ -9177,6 +9187,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     map.setPaintProperty('talhoes-layer', 'fill-color', App.ui._getThemeColors().primary);
                     map.setPaintProperty('talhoes-layer', 'fill-opacity', defaultFillOpacity);
                     map.setPaintProperty('talhoes-border-layer', 'line-opacity', defaultLineOpacity);
+                    map.setFilter('talhoes-labels', null); // Mostra todos os rótulos
                 }
 
                 console.log("--- [END] calculateAndApplyRiskView ---");
