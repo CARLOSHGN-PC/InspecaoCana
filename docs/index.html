@@ -996,6 +996,27 @@
         background-color: var(--color-danger);
         color: var(--color-white);
       }
+      .map-block-controls {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        display: flex;
+        gap: 10px;
+        background-color: var(--color-surface);
+        padding: 8px;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+      }
+      #block-filter-select {
+        margin-top: 0;
+        width: 200px;
+      }
+      #toggle-selection-mode-btn.active {
+        background-color: var(--color-accent);
+        color: var(--color-white);
+      }
 
       /* [REDESIGN] Estilos para o InfoBox do Talhão e Armadilha */
       .info-box {
@@ -2735,6 +2756,26 @@
                         <button id="btnSaveTalhao" class="save" style="max-width: 250px;"><i class="fas fa-save"></i> Guardar Talhão</button>
                     </div>
                 </div>
+                <div class="card" style="border-left-color: var(--color-info); margin-top: 30px;">
+                    <h3><i class="fas fa-cubes"></i> Gerenciar Blocos de Aplicação/Monitoramento</h3>
+                    <p>Crie e organize blocos de talhões para facilitar o filtro no mapa e a geração de relatórios.</p>
+                    <input type="hidden" id="editingBlockId">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="blockName" class="required">Nome do Bloco:</label>
+                            <input type="text" id="blockName" placeholder="Ex: Bloco 1 - Norte">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button id="btnSaveBlock" class="save" style="max-width: 250px;"><i class="fas fa-plus-circle"></i> Salvar Bloco</button>
+                        <button id="btnCancelEditBlock" class="btn-secondary" style="max-width: 250px; display: none;"><i class="fas fa-times"></i> Cancelar Edição</button>
+                    </div>
+
+                    <h4 style="margin-top:20px;">Blocos Existentes</h4>
+                    <div id="blocksList" class="fazenda-list" style="margin-top: 10px;">
+                        <!-- Lista de blocos será populada pelo app.js -->
+                    </div>
+                </div>
             </section>
 
             <section id="gerenciarUsuarios" class="tab-content card" aria-label="Gerir Utilizadores" tabindex="0" hidden>
@@ -3165,6 +3206,22 @@
                 </div>
             </section>
 
+            <section id="relatorioBlocos" class="tab-content card" aria-label="Relatório de Blocos" tabindex="0" hidden>
+                <h2><i class="fas fa-cubes"></i> Relatório de Blocos</h2>
+                <p style="margin-top: -15px; margin-bottom: 20px; color: var(--color-text-light);">Gere um relatório visual ou de dados para um bloco de talhões específico.</p>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="blocoRelatorioSelect" class="required">Selecione o Bloco:</label>
+                        <select id="blocoRelatorioSelect" required>
+                            <!-- Options will be populated by app.js -->
+                        </select>
+                    </div>
+                </div>
+                <div class="botoes-relatorio">
+                    <button id="btnPDFBloco" type="button"><i class="fas fa-file-pdf"></i> Gerar Relatório de Mapa (PDF)</button>
+                </div>
+            </section>
+
         </main>
         
         <div id="monitoramentoAereo-container" class="tab-content">
@@ -3174,6 +3231,14 @@
                     <input type="text" id="map-farm-search-input" placeholder="Pesquisar fazenda...">
                     <button id="map-farm-search-btn" class="map-control-btn" title="Pesquisar Fazenda">
                         <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                 <div class="map-block-controls">
+                    <select id="block-filter-select">
+                        <option value="">Todos os Blocos</option>
+                    </select>
+                    <button id="toggle-selection-mode-btn" class="map-control-btn" title="Ativar Modo de Seleção">
+                        <i class="fas fa-mouse-pointer"></i>
                     </button>
                 </div>
                 <div class="map-controls">
