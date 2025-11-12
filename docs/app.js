@@ -229,6 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
             clima: [],
             apontamentoPlantioFormIsDirty: false,
             syncInterval: null,
+            blocks: [],
+            editingBlockId: null,
+            highlightedFeatures: [],
         },
         
         elements: {
@@ -636,6 +639,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnCenterMap: document.getElementById('btnCenterMap'),
                 btnHistory: document.getElementById('btnHistory'),
                 btnToggleRiskView: document.getElementById('btnToggleRiskView'),
+                btnOpenBlockManagement: document.getElementById('btnOpenBlockManagement'),
                 infoBox: document.getElementById('talhao-info-box'),
                 infoBoxContent: document.getElementById('talhao-info-box-content'),
                 infoBoxCloseBtn: document.getElementById('close-info-box'),
@@ -644,6 +648,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 trapInfoBoxCloseBtn: document.getElementById('close-trap-info-box'),
                     mapFarmSearchInput: document.getElementById('map-farm-search-input'),
                     mapFarmSearchBtn: document.getElementById('map-farm-search-btn'),
+            },
+            blockManagementModal: {
+                overlay: document.getElementById('blockManagementModal'),
+                closeBtn: document.getElementById('blockManagementModalCloseBtn'),
+                form: document.getElementById('blockForm'),
+                blockNameInput: document.getElementById('blockName'),
+                blockList: document.getElementById('blockList'),
+                saveBtn: document.getElementById('btnSaveBlock'),
             },
             relatorioPlantio: {
                 frente: document.getElementById('plantioRelatorioFrente'),
@@ -1293,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyId = App.state.currentUser.companyId;
                 const isSuperAdmin = App.state.currentUser.role === 'super-admin';
 
-                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima'];
+                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima', 'blocks'];
 
                 if (isSuperAdmin) {
                     // Super Admin ouve TODOS os dados de todas as coleções relevantes
@@ -1540,6 +1552,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.populateHarvestPlanSelect();
                         if (activeTab === 'planejamentoColheita') {
                             this.showHarvestPlanList();
+                        }
+                        break;
+                    case 'blocks':
+                        if (App.elements.blockManagementModal.overlay.classList.contains('show')) {
+                            this.renderBlockList();
                         }
                         break;
                     case 'registros':
@@ -3483,6 +3500,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
+            openBlockManagementModal() {
+                App.elements.blockManagementModal.overlay.classList.add('show');
+                this.renderBlockList();
+                this.populateBlockReportSelect();
+            },
+
+            closeBlockManagementModal() {
+                App.elements.blockManagementModal.overlay.classList.remove('show');
+            },
+
+            populateBlockReportSelect() {
+                const select = document.getElementById('blockReportSelect');
+                if (!select) return;
+                select.innerHTML = '<option value="">Selecione um bloco...</option>';
+                if (App.state.blocks.length === 0) {
+                    select.innerHTML += '<option value="" disabled>Nenhum bloco criado</option>';
+                } else {
+                    App.state.blocks.forEach(block => {
+                        select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
+                    });
+                }
+            },
+
+            renderBlockList() {
+                const { blockList } = App.elements.blockManagementModal;
+                blockList.innerHTML = '';
+                if (App.state.blocks.length === 0) {
+                    blockList.innerHTML = '<p>Nenhum bloco cadastrado.</p>';
+                    return;
+                }
+                App.state.blocks.forEach(block => {
+                    const blockEl = document.createElement('div');
+                    blockEl.className = 'block-item';
+                    blockEl.innerHTML = `
+                        <span>${block.name}</span>
+                        <div>
+                            <button class="btn-excluir" style="background-color: var(--color-info);" data-action="edit-block-members" data-id="${block.id}"><i class="fas fa-users"></i> Gerir</button>
+                            <button class="btn-excluir" data-action="delete-block" data-id="${block.id}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    blockList.appendChild(blockEl);
+                });
+            },
+
             async renderSyncHistoryDetails(logId) {
                 const modal = App.elements.syncHistoryDetailModal;
                 modal.body.innerHTML = '<div class="spinner-container" style="display:flex; justify-content:center; padding: 20px;"><div class="spinner"></div></div>';
@@ -4056,6 +4117,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (monitoramentoAereoEls.trapInfoBoxCloseBtn) monitoramentoAereoEls.trapInfoBoxCloseBtn.addEventListener('click', () => App.mapModule.hideTrapInfo());
                 
                 // Listeners for the main map controls, added here to prevent re-binding
+                if (monitoramentoAereoEls.btnOpenBlockManagement) {
+                    monitoramentoAereoEls.btnOpenBlockManagement.addEventListener('click', () => {
+                        if (App.state.editingBlockId) {
+                            App.actions.saveBlockMembers();
+                        } else {
+                            this.openBlockManagementModal();
+                        }
+                    });
+                }
                 if (monitoramentoAereoEls.btnAddTrap) monitoramentoAereoEls.btnAddTrap.addEventListener('click', () => {
                     if (App.state.trapPlacementMode === 'manual_select') {
                         App.state.trapPlacementMode = null;
@@ -4392,6 +4462,27 @@ document.addEventListener('DOMContentLoaded', () => {
                             App.state.apontamentoPlantioFormIsDirty = true;
                         }
                     });
+                }
+
+                const blockModal = App.elements.blockManagementModal;
+                if (blockModal.overlay) blockModal.overlay.addEventListener('click', e => { if (e.target === blockModal.overlay) this.closeBlockManagementModal(); });
+                if (blockModal.closeBtn) blockModal.closeBtn.addEventListener('click', () => this.closeBlockManagementModal());
+                if (blockModal.form) blockModal.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    App.actions.saveBlock();
+                });
+                if (blockModal.saveBtn) blockModal.saveBtn.addEventListener('click', () => App.actions.saveBlock());
+                if (blockModal.blockList) blockModal.blockList.addEventListener('click', (e) => {
+                    const button = e.target.closest('button[data-action]');
+                    if (!button) return;
+                    const { action, id } = button.dataset;
+                    if (action === 'delete-block') App.actions.deleteBlock(id);
+                    if (action === 'edit-block-members') App.actions.editBlockMembers(id);
+                });
+
+                const btnGenerateBlockReport = document.getElementById('btnGenerateBlockReport');
+                if (btnGenerateBlockReport) {
+                    btnGenerateBlockReport.addEventListener('click', () => App.reports.generateBlockReportPDF());
                 }
             }
         },
@@ -7719,6 +7810,98 @@ document.addEventListener('DOMContentLoaded', () => {
                     passwordInput.value = '';
                 }
             },
+
+        async saveBlock() {
+            const { blockNameInput } = App.elements.blockManagementModal;
+            const blockName = blockNameInput.value.trim();
+            if (!blockName) {
+                App.ui.showAlert("O nome do bloco é obrigatório.", "error");
+                return;
+            }
+
+            const blockData = {
+                name: blockName,
+                companyId: App.state.currentUser.companyId,
+                members: [] // Initially empty
+            };
+
+            try {
+                await App.data.addDocument('blocks', blockData);
+                App.ui.showAlert(`Bloco "${blockName}" criado com sucesso!`, "success");
+                blockNameInput.value = '';
+            } catch (error) {
+                App.ui.showAlert("Erro ao criar o bloco.", "error");
+                console.error("Error creating block:", error);
+            }
+        },
+
+        deleteBlock(blockId) {
+            const block = App.state.blocks.find(b => b.id === blockId);
+            if (!block) return;
+
+            App.ui.showConfirmationModal(`Tem a certeza que deseja excluir o bloco "${block.name}"?`, async () => {
+                try {
+                    await App.data.deleteDocument('blocks', blockId);
+                    App.ui.showAlert("Bloco excluído com sucesso.", "info");
+                } catch (error) {
+                    App.ui.showAlert("Erro ao excluir o bloco.", "error");
+                    console.error("Error deleting block:", error);
+                }
+            });
+        },
+
+        editBlockMembers(blockId) {
+            App.state.editingBlockId = blockId;
+            const block = App.state.blocks.find(b => b.id === blockId);
+            App.ui.closeBlockManagementModal();
+            App.ui.showAlert(`Modo de edição ativado para o bloco "${block.name}". Clique nos talhões para adicionar ou remover.`, "info", 5000);
+            App.elements.monitoramentoAereo.btnOpenBlockManagement.innerHTML = '<i class="fas fa-save"></i> Salvar Bloco';
+            App.mapModule.highlightBlockMembers();
+        },
+
+        exitBlockEditingMode() {
+            App.state.editingBlockId = null;
+            App.elements.monitoramentoAereo.btnOpenBlockManagement.innerHTML = '<i class="fas fa-layer-group"></i> Gerir Blocos';
+            App.mapModule.clearHighlights();
+        },
+
+        toggleBlockMembership(feature) {
+            if (!App.state.editingBlockId) return;
+
+            const farmCode = App.mapModule._findProp(feature, ['FUNDO_AGR']);
+            const talhaoName = App.mapModule._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
+            const memberId = `${farmCode}-${talhaoName}`;
+
+            const block = App.state.blocks.find(b => b.id === App.state.editingBlockId);
+            const memberIndex = block.members.findIndex(m => m.id === memberId);
+
+            if (memberIndex > -1) {
+                block.members.splice(memberIndex, 1);
+                App.mapModule.highlightFeature(feature.id, false);
+            } else {
+                block.members.push({
+                    id: memberId,
+                    farmCode: farmCode,
+                    talhaoName: talhaoName
+                });
+                App.mapModule.highlightFeature(feature.id, true);
+            }
+        },
+
+        async saveBlockMembers() {
+            if (!App.state.editingBlockId) return;
+
+            const block = App.state.blocks.find(b => b.id === App.state.editingBlockId);
+            try {
+                await App.data.updateDocument('blocks', App.state.editingBlockId, { members: block.members });
+                App.ui.showAlert(`Bloco "${block.name}" atualizado com sucesso!`, 'success');
+            } catch (error) {
+                App.ui.showAlert("Erro ao salvar as alterações do bloco.", 'error');
+                console.error("Error saving block members:", error);
+            } finally {
+                this.exitBlockEditingMode();
+            }
+        },
         },
         gemini: {
             async _callGeminiAPI(prompt, contextData, loadingMessage = "A processar com IA...") {
@@ -8249,31 +8432,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 App.elements.monitoramentoAereo.btnToggleRiskView.style.display = 'flex';
                 map.on('click', layerId, (e) => {
-                    // Impede que o clique no talhão seja acionado se um marcador (armadilha) for clicado
                     if (e.originalEvent.target.closest('.mapboxgl-marker')) {
                         return;
                     }
-
                     if (e.features.length === 0) return;
                     const clickedFeature = e.features[0];
-                    const userMarker = App.state.mapboxUserMarker;
 
-                    if (App.state.trapPlacementMode === 'manual_select') {
-                        // Não instala diretamente. Mostra um modal de confirmação primeiro.
+                    if (App.state.editingBlockId) {
+                        App.actions.toggleBlockMembership(clickedFeature);
+                    } else if (App.state.trapPlacementMode === 'manual_select') {
                         const clickPosition = e.lngLat;
                         this.showTrapPlacementModal('manual_confirm', { feature: clickedFeature, position: clickPosition });
                     } else {
                         if (App.state.selectedMapFeature) {
-                             map.setFeatureState({ source: sourceId, id: App.state.selectedMapFeature.id }, { selected: false });
+                            map.setFeatureState({ source: sourceId, id: App.state.selectedMapFeature.id }, { selected: false });
                         }
-                        
                         if (App.state.selectedMapFeature && App.state.selectedMapFeature.id === clickedFeature.id) {
                             App.state.selectedMapFeature = null;
                             this.hideTalhaoInfo();
                         } else {
                             App.state.selectedMapFeature = clickedFeature;
                             map.setFeatureState({ source: sourceId, id: clickedFeature.id }, { selected: true });
-
                             let riskPercentage = null;
                             if (App.state.riskViewActive) {
                                 const farmCode = this._findProp(clickedFeature, ['FUNDO_AGR']);
@@ -9318,6 +9497,43 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }, 8000);
+            },
+
+            highlightBlockMembers() {
+                this.clearHighlights();
+                const block = App.state.blocks.find(b => b.id === App.state.editingBlockId);
+                if (!block || !App.state.geoJsonData) return;
+
+                const allSourceFeatures = App.state.mapboxMap.querySourceFeatures('talhoes-source');
+                const featuresToHighlight = allSourceFeatures.filter(feature => {
+                    const farmCode = this._findProp(feature, ['FUNDO_AGR']);
+                    const talhaoName = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
+                    const memberId = `${farmCode}-${talhaoName}`;
+                    return block.members.some(m => m.id === memberId);
+                });
+
+                featuresToHighlight.forEach(feature => this.highlightFeature(feature.id, true));
+            },
+
+            highlightFeature(featureId, shouldHighlight) {
+                App.state.mapboxMap.setFeatureState({ source: 'talhoes-source', id: featureId }, { selected: shouldHighlight });
+                if (shouldHighlight) {
+                    if (!App.state.highlightedFeatures.includes(featureId)) {
+                        App.state.highlightedFeatures.push(featureId);
+                    }
+                } else {
+                    const index = App.state.highlightedFeatures.indexOf(featureId);
+                    if (index > -1) {
+                        App.state.highlightedFeatures.splice(index, 1);
+                    }
+                }
+            },
+
+            clearHighlights() {
+                App.state.highlightedFeatures.forEach(id => {
+                    App.state.mapboxMap.setFeatureState({ source: 'talhoes-source', id: id }, { selected: false });
+                });
+                App.state.highlightedFeatures = [];
             },
         },
 
@@ -11314,6 +11530,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 this._fetchAndDownloadReport('risk-view/csv', filters, 'relatorio_de_risco.csv');
             },
+
+                generateBlockReportPDF() {
+                    const blockId = document.getElementById('blockReportSelect').value;
+                    if (!blockId) {
+                        App.ui.showAlert("Por favor, selecione um bloco para gerar o relatório.", "warning");
+                        return;
+                    }
+                    const filters = {
+                        blockId: blockId
+                    };
+                    this._fetchAndDownloadReport('block/pdf', filters, 'relatorio_bloco.pdf');
+                },
         },
 
         pwa: {

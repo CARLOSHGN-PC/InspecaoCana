@@ -1,0 +1,102 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic:
+    - generic: 
+    - text: Não foi possível obter sua localização.
+  - text:   
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - button "Abrir menu" [ref=e4] [cursor=pointer]
+      - heading " AgroVetor" [level=1] [ref=e9] [cursor=pointer]:
+        - generic [ref=e10]: 
+        - text: AgroVetor
+      - generic [ref=e11]:
+        - generic [ref=e12]:
+          - button "Notificações" [ref=e13] [cursor=pointer]:
+            - generic [ref=e14]: 
+            - generic: "0"
+          - generic:
+            - generic:
+              - generic: Notificações
+              - button "Limpar"
+            - generic:
+              - generic: 
+              - paragraph: Nenhuma notificação nova.
+        - generic [ref=e15]:
+          - button "Menu do Utilizador" [ref=e16] [cursor=pointer]:
+            - generic [ref=e17]: 
+          - menu:
+            - generic:
+              - paragraph:
+                - strong: "Conectado como:"
+              - paragraph: testuser
+            - generic:
+              - generic: 
+              - text: 12/11/2025, 16:12
+            - separator
+            - generic:
+              - paragraph: Tema
+              - generic:
+                - button "Verde (Padrão)"
+                - button "Azul"
+                - button "Escuro"
+            - separator
+            - text: 
+            - menuitem " Sincronizar Manualmente":
+              - generic: 
+              - text: Sincronizar Manualmente
+            - menuitem " Alterar Senha":
+              - generic: 
+              - text: Alterar Senha
+            - menuitem " Sair":
+              - generic: 
+              - text: Sair
+    - navigation "Menu Principal" [ref=e18]:
+      - generic [ref=e19]:
+        - button " Dashboard" [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: 
+          - generic [ref=e22]: Dashboard
+        - button " Monitoramento Aéreo" [active] [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: 
+          - generic [ref=e25]: Monitoramento Aéreo
+        - button " Plan. Inspeção" [ref=e26] [cursor=pointer]:
+          - generic [ref=e27]: 
+          - generic [ref=e28]: Plan. Inspeção
+        - button " Colheita ›" [ref=e29] [cursor=pointer]:
+          - generic [ref=e30]: 
+          - generic [ref=e31]: Colheita
+          - generic [ref=e32]: ›
+        - button " Lançamentos ›" [ref=e33] [cursor=pointer]:
+          - generic [ref=e34]: 
+          - generic [ref=e35]: Lançamentos
+          - generic [ref=e36]: ›
+        - button " Relatórios ›" [ref=e37] [cursor=pointer]:
+          - generic [ref=e38]: 
+          - generic [ref=e39]: Relatórios
+          - generic [ref=e40]: ›
+        - button " Administrativo ›" [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: 
+          - generic [ref=e43]: Administrativo
+          - generic [ref=e44]: ›
+    - main [ref=e45]:                                       $                              +  *   * * *  * *  +        * * * * *    * * * * * * *   * *          *                    * * *    * *   $ * * * * * * *   * * *  +   * * *   * *         * *    * *        *      * *       * * * *    *  * *     * * * *            * *                                * *         * * * * *  +    * *    * * * * * * * *   * *  
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - region "Map" [ref=e49]
+        - link "Mapbox homepage" [ref=e51] [cursor=pointer]:
+          - /url: https://www.mapbox.com/
+      - generic [ref=e52]:
+        - textbox "Pesquisar fazenda..."
+        - button "" [ref=e53] [cursor=pointer]:
+          - generic [ref=e54]: 
+      - generic [ref=e55]:
+        - button "" [ref=e56] [cursor=pointer]:
+          - generic [ref=e57]: 
+        - button "" [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]: 
+        - text: 
+        - button "+" [ref=e60] [cursor=pointer]:
+          - generic [ref=e61]: +
+    - text:    *      * * * * +  
+```
