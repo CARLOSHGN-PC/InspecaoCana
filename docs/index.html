@@ -3409,6 +3409,43 @@
             </div>
         </div>
 
+        <!-- NOVO: Modal de Gerenciamento de Blocos -->
+        <div id="blockManagementModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Gerenciamento de Blocos</h2>
+                    <button id="blockManagementModalCloseBtn" class="modal-close-btn">&times;</button>
+                </div>
+                <form id="blockForm">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="blockName">Nome do Novo Bloco:</label>
+                            <input type="text" id="blockName" placeholder="Ex: Bloco 1">
+                        </div>
+                        <div class="form-col" style="align-self: flex-end;">
+                            <button id="btnSaveBlock" type="submit" class="save"><i class="fas fa-plus"></i> Criar Bloco</button>
+                        </div>
+                    </div>
+                </form>
+                <hr style="margin: 20px 0;">
+                <h3>Blocos Existentes</h3>
+                <div id="blockList" class="fazenda-list"></div>
+
+                <div class="card" style="border-left-color: var(--color-info); margin-top: 30px;">
+                    <h3><i class="fas fa-file-pdf"></i> Gerar Relatório de Bloco</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="blockReportSelect">Selecione um Bloco:</label>
+                            <select id="blockReportSelect"></select>
+                        </div>
+                        <div class="form-col" style="align-self: flex-end;">
+                            <button id="btnGenerateBlockReport" class="save" style="background: var(--color-info);"><i class="fas fa-file-pdf"></i> Gerar Relatório</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- NOVO: Modal para Detalhes do Histórico de Sincronização -->
         <div id="syncHistoryDetailModal" class="modal-overlay">
             <div class="modal-content" style="max-width: 800px;">
