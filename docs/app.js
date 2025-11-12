@@ -7,7 +7,6 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 import { openDB } from 'https://unpkg.com/idb@7.1.1/build/index.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Jules Debug: DOMContentLoaded event fired.');
 
     // Lógica da Tela de Abertura
     const splashScreen = document.getElementById('splash-screen');
@@ -149,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         { label: 'Relatório de Risco', icon: 'fas fa-shield-alt', target: 'relatorioRisco', permission: 'relatorioRisco' },
                         { label: 'Relatórios de Plantio', icon: 'fas fa-chart-bar', target: 'relatorioPlantio', permission: 'relatorioPlantio' },
                         { label: 'Relatório Climatológico', icon: 'fas fa-file-pdf', target: 'relatorioClima', permission: 'relatorioClima' },
-                        { label: 'Relatório de Blocos', icon: 'fas fa-cubes', target: 'relatorioBlocos', permission: 'relatorioMonitoramento' },
                     ]
                 },
                 {
@@ -162,7 +160,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         { label: 'Configurações da Empresa', icon: 'fas fa-building', target: 'configuracoesEmpresa', permission: 'configuracoes' },
                         { label: 'Histórico de Sincronização', icon: 'fas fa-history', target: 'syncHistory', permission: 'syncHistory' },
                         { label: 'Gerenciar Lançamentos', icon: 'fas fa-edit', target: 'gerenciarLancamentos', permission: 'gerenciarLancamentos' },
-                        { label: 'Gestão de Blocos', icon: 'fas fa-cubes', target: 'gestaoBlocos', permission: 'configuracoes' },
                     ]
                 },
                 {
@@ -182,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         state: {
-            blocos: [],
             isImpersonating: false,
             originalUser: null,
             isSyncing: false,
@@ -228,9 +224,6 @@ document.addEventListener('DOMContentLoaded', () => {
             lastKnownPosition: null,
             riskViewActive: false,
             isTracking: false,
-            blockEditMode: false,
-            activeBlock: null,
-            selectedTalhoesForBlock: [],
             plantio: [], // Placeholder for Plantio data
             cigarrinha: [], // Placeholder for Cigarrinha data
             clima: [],
@@ -695,11 +688,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fim: document.getElementById('riscoRelatorioFim'),
                 btnPDF: document.getElementById('btnPDFRisco'),
                 btnExcel: document.getElementById('btnExcelRisco'),
-            },
-            blocos: {
-                name: document.getElementById('blockName'),
-                btnSave: document.getElementById('btnSaveBlock'),
-                list: document.getElementById('blockList'),
             },
             trapPlacementModal: {
                 overlay: document.getElementById('trapPlacementModal'),
@@ -1305,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyId = App.state.currentUser.companyId;
                 const isSuperAdmin = App.state.currentUser.role === 'super-admin';
 
-                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima', 'blocos'];
+                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima'];
 
                 if (isSuperAdmin) {
                     // Super Admin ouve TODOS os dados de todas as coleções relevantes
@@ -1568,11 +1556,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         if (activeTab === 'excluirDados') {
                             this.renderExclusao();
-                        }
-                        break;
-                    case 'blocos':
-                        if (activeTab === 'gestaoBlocos') {
-                            this.renderBlockList();
                         }
                         break;
                     // No specific actions needed for 'cigarrinha' or 'armadilhas' on snapshot,
@@ -1943,8 +1926,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 if (id === 'cadastrarPessoas') this.renderPersonnelList();
-                if (id === 'gestaoBlocos') this.renderBlockList();
-                if (id === 'relatorioBlocos') this.renderBlockReport();
                 if (id === 'planejamento') this.renderPlanejamento();
                 if (id === 'planejamentoColheita') {
                     this.showHarvestPlanList();
@@ -3579,63 +3560,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
-            renderBlockList() {
-                const { list } = App.elements.blocos;
-                list.innerHTML = '';
-                if (App.state.blocos.length === 0) {
-                    list.innerHTML = '<p>Nenhum bloco cadastrado.</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.id = 'blockTable';
-                table.className = 'harvestPlanTable';
-                table.innerHTML = `<thead><tr><th>Nome do Bloco</th><th>Ações</th></tr></thead><tbody></tbody>`;
-                const tbody = table.querySelector('tbody');
-                App.state.blocos.sort((a, b) => a.name.localeCompare(b.name)).forEach(b => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td data-label="Nome">${b.name}</td>
-                        <td data-label="Ações">
-                            <div style="display: flex; justify-content: flex-end; gap: 5px;">
-                                <button class="btn-excluir" style="background:var(--color-info)" data-action="edit-block" data-id="${b.id}"><i class="fas fa-edit"></i></button>
-                                <button class="btn-excluir" data-action="delete-block" data-id="${b.id}"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    `;
-                });
-                list.appendChild(table);
-            },
-
             async retrySyncItem(logId, itemIndex) {
                 App.ui.setLoading(true, "A tentar sincronizar novamente...");
                 try {
-            },
-
-            renderBlockList() {
-                const { list } = App.elements.blocos;
-                list.innerHTML = '';
-                if (App.state.blocos.length === 0) {
-                    list.innerHTML = '<p>Nenhum bloco cadastrado.</p>';
-                    return;
-                }
-                const table = document.createElement('table');
-                table.id = 'blockTable';
-                table.className = 'harvestPlanTable';
-                table.innerHTML = `<thead><tr><th>Nome do Bloco</th><th>Ações</th></tr></thead><tbody></tbody>`;
-                const tbody = table.querySelector('tbody');
-                App.state.blocos.sort((a, b) => a.name.localeCompare(b.name)).forEach(b => {
-                    const row = tbody.insertRow();
-                    row.innerHTML = `
-                        <td data-label="Nome">${b.name}</td>
-                        <td data-label="Ações">
-                            <div style="display: flex; justify-content: flex-end; gap: 5px;">
-                                <button class="btn-excluir" style="background:var(--color-info)" data-action="edit-block" data-id="${b.id}"><i class="fas fa-edit"></i></button>
-                                <button class="btn-excluir" data-action="delete-block" data-id="${b.id}"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    `;
-                });
-                list.appendChild(table);
                     const logDoc = await App.data.getDocument('sync_history_store', logId);
                     if (!logDoc || !logDoc.items || !logDoc.items[itemIndex]) {
                         throw new Error("Registo de log ou item não encontrado.");
@@ -4461,16 +4388,6 @@ document.addEventListener('DOMContentLoaded', () => {
                  const plantioRecordsContainer = App.elements.apontamentoPlantio.recordsContainer;
                 if (plantioRecordsContainer) {
                     plantioRecordsContainer.addEventListener('click', (e) => {
-                if (App.elements.blocos.btnSave) App.elements.blocos.btnSave.addEventListener('click', () => App.actions.saveBlock());
-                if (App.elements.blocos.list) App.elements.blocos.list.addEventListener('click', e => {
-                    const btn = e.target.closest('button');
-                    if (!btn) return;
-                    const { action, id } = btn.dataset;
-                    if (action === 'edit-block') App.actions.editBlock(id);
-                    if (action === 'delete-block') App.actions.deleteBlock(id);
-                });
-                if (document.getElementById('btnSaveBlockChanges')) document.getElementById('btnSaveBlockChanges').addEventListener('click', () => App.actions.saveBlockChanges());
-                if (document.getElementById('btnCancelBlockEdit')) document.getElementById('btnCancelBlockEdit').addEventListener('click', () => App.actions.cancelBlockEdit());
                         if (e.target.closest('.btn-remover-amostra')) {
                             App.state.apontamentoPlantioFormIsDirty = true;
                         }
@@ -7572,87 +7489,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
-            async saveBlock() {
-                const { name } = App.elements.blocos;
-                const nameValue = name.value.trim();
-                if (!nameValue) {
-                    App.ui.showAlert("O nome do bloco é obrigatório.", "error");
-                    return;
-                }
-
-                const data = {
-                    name: nameValue,
-                    companyId: App.state.currentUser.companyId,
-                    talhoes: []
-                };
-
-                App.ui.showConfirmationModal(`Tem a certeza que deseja guardar o bloco "${nameValue}"?`, async () => {
-                    App.ui.setLoading(true, "A guardar...");
-                    try {
-                        await App.data.addDocument('blocos', data);
-                        App.ui.showAlert("Bloco guardado com sucesso!");
-                        name.value = '';
-                    } catch (error) {
-                        console.error("Erro ao guardar o bloco:", error);
-                        App.ui.showAlert(`Erro ao guardar o bloco: ${error.message}.`, "error");
-                    } finally {
-                        App.ui.setLoading(false);
-                    }
-                });
-            },
-
-            deleteBlock(blockId) {
-                App.ui.showConfirmationModal("Tem a certeza que deseja excluir este bloco?", async () => {
-                    await App.data.deleteDocument('blocos', blockId);
-                    App.ui.showAlert('Bloco excluído com sucesso.', 'info');
-                });
-            },
-
-            editBlock(blockId) {
-                const block = App.state.blocos.find(b => b.id === blockId);
-                if (!block) return;
-
-                App.state.activeBlock = block;
-                App.state.blockEditMode = true;
-                App.state.selectedTalhoesForBlock = [...block.talhoes];
-
-                App.ui.showTab('monitoramentoAereo');
-                document.getElementById('block-edit-controls').style.display = 'flex';
-                document.getElementById('editingBlockName').textContent = block.name;
-
-                App.mapModule.highlightTalhoesForBlock(App.state.selectedTalhoesForBlock);
-            },
-
-            async saveBlockChanges() {
-                if (!App.state.activeBlock) return;
-
-                const blockId = App.state.activeBlock.id;
-                const updatedData = {
-                    talhoes: App.state.selectedTalhoesForBlock
-                };
-
-                App.ui.setLoading(true, "A salvar alterações...");
-                try {
-                    await App.data.updateDocument('blocos', blockId, updatedData);
-                    App.ui.showAlert("Bloco atualizado com sucesso!");
-                    this.cancelBlockEdit();
-                } catch (error) {
-                    console.error("Erro ao salvar alterações do bloco:", error);
-                    App.ui.showAlert("Erro ao salvar alterações.", "error");
-                } finally {
-                    App.ui.setLoading(false);
-                }
-            },
-
-            cancelBlockEdit() {
-                App.mapModule.highlightTalhoesForBlock([]);
-                App.state.blockEditMode = false;
-                App.state.activeBlock = null;
-                App.state.selectedTalhoesForBlock = [];
-                document.getElementById('block-edit-controls').style.display = 'none';
-                App.ui.showTab('gestaoBlocos');
-            },
-
             async deduplicateTraps() {
                 const confirmationMessage = `Tem a certeza que deseja remover as armadilhas duplicadas? Esta ação irá manter apenas a armadilha mais recente em cada talhão e apagar todas as outras. A ação não pode ser desfeita.`;
                 App.ui.showConfirmationModal(confirmationMessage, async () => {
@@ -8311,7 +8147,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         generateId: true // Important for feature state
                     });
                 }
-                    this.populateBlockFilter();
 
                 const themeColors = App.ui._getThemeColors();
 
@@ -8422,22 +8257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (e.features.length === 0) return;
                     const clickedFeature = e.features[0];
                     const userMarker = App.state.mapboxUserMarker;
-
-                    if (App.state.blockEditMode) {
-                        const farmCode = this._findProp(clickedFeature, ['FUNDO_AGR']);
-                        const talhaoName = this._findProp(clickedFeature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
-                        const talhaoId = `${farmCode}-${talhaoName}`;
-
-                        const index = App.state.selectedTalhoesForBlock.indexOf(talhaoId);
-                        if (index > -1) {
-                            App.state.selectedTalhoesForBlock.splice(index, 1);
-                            map.setFeatureState({ source: sourceId, id: clickedFeature.id }, { selected: false });
-                        } else {
-                            App.state.selectedTalhoesForBlock.push(talhaoId);
-                            map.setFeatureState({ source: sourceId, id: clickedFeature.id }, { selected: true });
-                        }
-                        return;
-                    }
 
                     if (App.state.trapPlacementMode === 'manual_select') {
                         // Não instala diretamente. Mostra um modal de confirmação primeiro.
@@ -9500,131 +9319,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
                 }, 8000);
             },
-
-            highlightTalhoesForBlock(talhaoIds) {
-                const map = App.state.mapboxMap;
-                if (!map || !App.state.geoJsonData) return;
-            },
-
-            populateBlockFilter() {
-                const select = document.getElementById('blockFilter');
-                select.innerHTML = '<option value="">Todos os Blocos</option>';
-                App.state.blocos.forEach(block => {
-                    select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
-                });
-                select.addEventListener('change', (e) => this.filterMapByBlock(e.target.value));
-            },
-
-            filterMapByBlock(blockId) {
-                const map = App.state.mapboxMap;
-                if (!map) return;
-
-                if (!blockId) {
-                    map.setFilter('talhoes-layer', null);
-                    map.setFilter('talhoes-border-layer', null);
-                    map.setFilter('talhoes-labels', null);
-                    return;
-                }
-
-                const block = App.state.blocos.find(b => b.id === blockId);
-                if (!block) return;
-
-                const filter = ['in', ['get', 'AGV_TALHAO'], ['literal', block.talhoes.map(t => t.split('-')[1])]];
-
-                map.setFilter('talhoes-layer', filter);
-                map.setFilter('talhoes-border-layer', filter);
-                map.setFilter('talhoes-labels', filter);
-
-                // Reset previous selections
-                if (map.blockFeatureIds) {
-                    map.blockFeatureIds.forEach(id => {
-                        map.setFeatureState({ source: 'talhoes-source', id }, { selected: false });
-                    });
-                }
-                map.blockFeatureIds = [];
-
-                const sourceFeatures = map.querySourceFeatures('talhoes-source');
-                const featuresToHighlight = sourceFeatures.filter(feature => {
-                    const farmCode = this._findProp(feature, ['FUNDO_AGR']);
-                    const talhaoName = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
-                    const talhaoId = `${farmCode}-${talhaoName}`;
-                    return talhaoIds.includes(talhaoId);
-                });
-
-                const featureIdsToHighlight = featuresToHighlight.map(f => f.id);
-                featureIdsToHighlight.forEach(id => {
-                    map.setFeatureState({ source: 'talhoes-source', id }, { selected: true });
-                });
-                map.blockFeatureIds = featureIdsToHighlight;
-            },
-
-            renderBlockReport() {
-                const select = document.getElementById('blockReportSelect');
-                select.innerHTML = '<option value="">Selecione um Bloco</option>';
-                App.state.blocos.forEach(block => {
-                    select.innerHTML += `<option value="${block.id}">${block.name}</option>`;
-                });
-
-                let reportMap = null;
-
-                select.addEventListener('change', (e) => {
-                    const blockId = e.target.value;
-                    if (!blockId) return;
-
-                    if (reportMap) {
-                        reportMap.remove();
-                    }
-
-                    document.getElementById('block-report-map').innerHTML = '';
-                    reportMap = new mapboxgl.Map({
-                        container: 'block-report-map',
-                        style: 'mapbox://styles/mapbox/satellite-streets-v12',
-                        center: [-48.45, -21.17],
-                        zoom: 12
-                    });
-
-                    reportMap.on('load', () => {
-                        const block = App.state.blocos.find(b => b.id === blockId);
-                        const talhoes = block.talhoes.map(t => t.split('-')[1]);
-                        const farmCodes = [...new Set(block.talhoes.map(t => t.split('-')[0]))];
-
-                        const colors = App.charts._getVibrantColors(farmCodes.length);
-                        const farmColorMap = new Map(farmCodes.map((code, i) => [code, colors[i]]));
-
-                        const legend = document.getElementById('block-report-legend');
-                        legend.innerHTML = '<h3>Legenda</h3>';
-                        farmColorMap.forEach((color, code) => {
-                            legend.innerHTML += `<div style="display: flex; align-items: center; margin-bottom: 5px;"><div style="width: 20px; height: 20px; background-color: ${color}; margin-right: 10px;"></div><span>${code}</span></div>`;
-                        });
-
-                        const caseStatement = ['case'];
-                        farmColorMap.forEach((color, code) => {
-                            caseStatement.push(['==', ['get', 'AGV_FUNDO'], code], color);
-                        });
-                        caseStatement.push('#cccccc'); // Default color
-
-                        reportMap.addSource('talhoes-report', {
-                            type: 'geojson',
-                            data: App.state.geoJsonData
-                        });
-
-                        reportMap.addLayer({
-                            id: 'talhoes-report-layer',
-                            type: 'fill',
-                            source: 'talhoes-report',
-                            paint: {
-                                'fill-color': caseStatement,
-                                'fill-opacity': 0.7
-                            },
-                            filter: ['in', ['get', 'AGV_TALHAO'], ['literal', talhoes]]
-                        });
-
-                        const features = App.state.geoJsonData.features.filter(f => talhoes.includes(f.properties.AGV_TALHAO));
-                        const bbox = turf.bbox(turf.featureCollection(features));
-                        reportMap.fitBounds(bbox, { padding: 20 });
-                    });
-                });
-            }
         },
 
         charts: {
@@ -11689,11 +11383,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Inicia a aplicação
-    console.log('Jules Debug: About to call App.init().');
     App.init();
-    console.log('Jules Debug: App.init() finished. About to set window.App.');
     window.App = App; // Expor para testes e depuração
-    console.log('Jules Debug: window.App is set.');
 });
 
 
