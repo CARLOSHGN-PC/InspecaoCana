@@ -926,25 +926,6 @@
           flex-direction: column;
           gap: 10px;
       }
-      .map-control-select {
-          width: 200px;
-          height: 50px;
-          background-color: var(--color-surface);
-          color: var(--color-text);
-          border: none;
-          border-radius: 25px;
-          box-shadow: var(--shadow-lg);
-          cursor: pointer;
-          font-size: 16px;
-          padding: 0 15px;
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
-          background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%2cxmlns='http://www.w3.org/2000/svg'%2cwidth='292.4'%2cheight='292.4'%3E%3Cpath%2cfill='%236c757d'%2cd='M287%2c69.4c-1.6-1.6-4.2-1.6-5.8%2c0L145.2%2c205.8%2c9.2%2c69.4c-1.6-1.6-4.2-1.6-5.8%2c0s-1.6%2c4.2%2c0%2c5.8l133.4%2c133.4c0.8%2c0.8%2c1.8%2c1.2%2c2.9%2c1.2s2.1-0.4%2c2.9-1.2L287%2c75.2c1.6-1.6%2c1.6-4.2%2c0-5.8z'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 15px center;
-          background-size: 12px;
-      }
       .map-search-container {
           position: absolute;
           top: 15px;
@@ -2478,32 +2459,6 @@
                 </div>
             </section>
 
-            <section id="relatorioBlocos" class="tab-content card" aria-label="Relatório de Blocos" tabindex="0" hidden>
-                <h2><i class="fas fa-layer-group"></i> Relatório de Blocos</h2>
-                <p style="margin-top: -15px; margin-bottom: 20px; color: var(--color-text-light);">Analise os dados consolidados por bloco.</p>
-                <div class="form-row">
-                    <div class="form-col">
-                        <label for="blocoRelatorioSelect" class="required">Selecione o Bloco:</label>
-                        <select id="blocoRelatorioSelect"></select>
-                    </div>
-                    <div class="form-col">
-                        <label for="blocoRelatorioInicio" class="required">Data Início:</label>
-                        <input type="date" id="blocoRelatorioInicio" />
-                    </div>
-                    <div class="form-col">
-                        <label for="blocoRelatorioFim" class="required">Data Fim:</label>
-                        <input type="date" id="blocoRelatorioFim" />
-                    </div>
-                </div>
-                <div class="botoes-relatorio">
-                    <button id="btnPDFBloco" type="button"><i class="fas fa-file-pdf"></i> Gerar Relatório (PDF)</button>
-                    <button id="btnExcelBloco" type="button"><i class="fas fa-file-excel"></i> Exportar para Excel</button>
-                </div>
-                <div id="blocoRelatorioResultados" style="margin-top: 20px;">
-                    <!-- Os resultados do relatório serão exibidos aqui -->
-                </div>
-            </section>
-
             <section id="lancamentoPerda" class="tab-content card" aria-label="Lançamento Perda" tabindex="0" hidden>
                 <h2><i class="fas fa-dollar-sign"></i> Lançamento Perda</h2>
                 <div class="form-row">
@@ -3222,9 +3177,6 @@
                     </button>
                 </div>
                 <div class="map-controls">
-                    <select id="mapBlockFilter" class="map-control-select">
-                        <option value="">Filtrar por Bloco</option>
-                    </select>
                     <button id="btnCenterMap" class="map-control-btn" title="Centralizar em Mim">
                         <i class="fas fa-location-arrow"></i>
                     </button>
@@ -3233,9 +3185,6 @@
                     </button>
                     <button id="btnToggleRiskView" class="map-control-btn" title="Visualização de Risco" style="display: none;">
                         <i class="fas fa-biohazard"></i>
-                    </button>
-                    <button id="btnManageBlocks" class="map-control-btn" title="Gerir Blocos">
-                        <i class="fas fa-layer-group"></i>
                     </button>
                     <button id="btnAddTrap" class="map-control-btn" title="Adicionar Armadilha no Local Atual">
                         <i class="fas fa-plus"></i>
@@ -3507,31 +3456,6 @@
                 <div class="modal-footer">
                     <button id="enableOfflineLoginModalCancelBtn" class="btn-secondary">Cancelar</button>
                     <button id="btnConfirmEnableOffline" class="save">Confirmar e Habilitar</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="blockManagerModal" class="modal-overlay">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Gerir Blocos</h2>
-                    <button id="blockManagerModalCloseBtn" class="modal-close-btn">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="blockName">Nome do Bloco:</label>
-                            <input type="text" id="blockName" placeholder="Ex: Bloco Norte">
-                        </div>
-                        <div class="form-col">
-                            <label for="blockFarms">Fazendas:</label>
-                            <select id="blockFarms" multiple></select>
-                        </div>
-                    </div>
-                    <button id="btnSaveBlock" class="save">Salvar Bloco</button>
-                    <hr>
-                    <h3>Blocos Existentes</h3>
-                    <div id="existingBlocks"></div>
                 </div>
             </div>
         </div>

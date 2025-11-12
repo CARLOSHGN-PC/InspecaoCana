@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         { label: 'Rel. Colheita Custom', icon: 'fas fa-file-invoice', target: 'relatorioColheitaCustom', permission: 'planejamentoColheita' },
                         { label: 'Rel. Monitoramento', icon: 'fas fa-map-marked-alt', target: 'relatorioMonitoramento', permission: 'relatorioMonitoramento' },
                         { label: 'Relatório de Risco', icon: 'fas fa-shield-alt', target: 'relatorioRisco', permission: 'relatorioRisco' },
-                        { label: 'Relatório de Blocos', icon: 'fas fa-cubes', target: 'relatorioBlocos', permission: 'relatorioRisco' },
                         { label: 'Relatórios de Plantio', icon: 'fas fa-chart-bar', target: 'relatorioPlantio', permission: 'relatorioPlantio' },
                         { label: 'Relatório Climatológico', icon: 'fas fa-file-pdf', target: 'relatorioClima', permission: 'relatorioClima' },
                     ]
@@ -228,7 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
             plantio: [], // Placeholder for Plantio data
             cigarrinha: [], // Placeholder for Cigarrinha data
             clima: [],
-            blocos: [], // NEW: For block management
             apontamentoPlantioFormIsDirty: false,
             syncInterval: null,
         },
@@ -638,7 +636,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnCenterMap: document.getElementById('btnCenterMap'),
                 btnHistory: document.getElementById('btnHistory'),
                 btnToggleRiskView: document.getElementById('btnToggleRiskView'),
-                mapBlockFilter: document.getElementById('mapBlockFilter'), // NEW: Block filter dropdown
                 infoBox: document.getElementById('talhao-info-box'),
                 infoBoxContent: document.getElementById('talhao-info-box-content'),
                 infoBoxCloseBtn: document.getElementById('close-info-box'),
@@ -692,13 +689,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 btnPDF: document.getElementById('btnPDFRisco'),
                 btnExcel: document.getElementById('btnExcelRisco'),
             },
-            relatorioBlocos: {
-                blocoSelect: document.getElementById('blocoRelatorioSelect'),
-                inicio: document.getElementById('blocoRelatorioInicio'),
-                fim: document.getElementById('blocoRelatorioFim'),
-                btnPDF: document.getElementById('btnPDFBloco'),
-                btnExcel: document.getElementById('btnExcelBloco'),
-            },
             trapPlacementModal: {
                 overlay: document.getElementById('trapPlacementModal'),
                 body: document.getElementById('trapPlacementModalBody'),
@@ -708,17 +698,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 confirmBtn: document.getElementById('trapPlacementModalConfirmBtn'),
             },
             installAppBtn: document.getElementById('installAppBtn'),
-            blockManagerModal: {
-                overlay: document.getElementById('blockManagerModal'),
-                closeBtn: document.getElementById('blockManagerModalCloseBtn'),
-                cancelBtn: document.getElementById('blockManagerModalCancelBtn'),
-                saveBtn: document.getElementById('blockManagerModalSaveBtn'),
-                blockNameInput: document.getElementById('blockNameInput'),
-                blockList: document.getElementById('blockList'),
-                availablePlotsList: document.getElementById('availablePlotsList'),
-                blockPlotsList: document.getElementById('blockPlotsList'),
-                editingBlockId: document.getElementById('editingBlockId'),
-            },
         },
 
         isFeatureGloballyActive(featureKey) {
@@ -1314,7 +1293,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const companyId = App.state.currentUser.companyId;
                 const isSuperAdmin = App.state.currentUser.role === 'super-admin';
 
-                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima', 'blocos'];
+                const companyScopedCollections = ['users', 'fazendas', 'personnel', 'registros', 'perdas', 'planos', 'harvestPlans', 'armadilhas', 'cigarrinha', 'cigarrinhaAmostragem', 'frentesDePlantio', 'apontamentosPlantio', 'clima'];
 
                 if (isSuperAdmin) {
                     // Super Admin ouve TODOS os dados de todas as coleções relevantes
@@ -1964,10 +1943,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
-                if (['relatorioBroca', 'relatorioPerda', 'relatorioMonitoramento', 'relatorioCigarrinha', 'relatorioBlocos'].includes(id)) this.setDefaultDatesForReportForms();
+                if (['relatorioBroca', 'relatorioPerda', 'relatorioMonitoramento', 'relatorioCigarrinha'].includes(id)) this.setDefaultDatesForReportForms();
                 if (id === 'relatorioColheitaCustom') this.populateHarvestPlanSelect();
                 if (['lancamentoBroca', 'lancamentoPerda', 'lancamentoCigarrinha', 'apontamentoPlantio'].includes(id)) this.setDefaultDatesForEntryForms();
-                if (id === 'relatorioBlocos') this.populateBlockReportSelector();
                 
                 localStorage.setItem('agrovetor_lastActiveTab', id);
                 this.closeAllMenus();
@@ -2106,23 +2084,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 App.elements.cigarrinhaAmostragem.data.max = today;
                 if (App.elements.lancamentoClima && App.elements.lancamentoClima.data) App.elements.lancamentoClima.data.max = today;
             },
-            populateBlockReportSelector() {
-                const select = App.elements.relatorioBlocos.blocoSelect;
-                if (!select) return;
-
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Todos</option>'; // Default option
-                App.state.blocos.sort((a, b) => a.name.localeCompare(b.name)).forEach(bloco => {
-                    select.innerHTML += `<option value="${bloco.id}">${bloco.name}</option>`;
-                });
-                select.value = currentValue;
-            },
             setDefaultDatesForReportForms() {
                 const today = new Date();
                 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
                 const todayDate = today.toISOString().split('T')[0];
 
-                const reportSections = ['broca', 'perda', 'cigarrinha', 'cigarrinhaAmostragem', 'relatorioMonitoramento', 'relatorioClima', 'relatorioBlocos'];
+                const reportSections = ['broca', 'perda', 'cigarrinha', 'cigarrinhaAmostragem', 'relatorioMonitoramento', 'relatorioClima'];
 
                 reportSections.forEach(section => {
                     const els = App.elements[section];
@@ -3516,55 +3483,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             },
 
-            showBlockManagerModal(blockId = null) {
-                const {
-                    overlay,
-                    blockNameInput,
-                    editingBlockId,
-                    blockList,
-                    availablePlotsList,
-                    blockPlotsList
-                } = App.elements.blockManagerModal;
-
-                // Clear previous state
-                blockNameInput.value = '';
-                editingBlockId.value = '';
-                availablePlotsList.innerHTML = '';
-                blockPlotsList.innerHTML = '';
-                blockList.innerHTML = ''; // Will implement block list rendering later
-
-                // Populate available plots
-                // An available plot is one that is not part of ANY existing block.
-                const plotsInBlocks = new Set();
-                App.state.blocos.forEach(bloco => {
-                    (bloco.plots || []).forEach(plotId => plotsInBlocks.add(plotId));
-                });
-
-                App.state.fazendas.forEach(fazenda => {
-                    (fazenda.talhoes || []).forEach(talhao => {
-                        // Check if the talhao ID is already in a block
-                        if (!plotsInBlocks.has(talhao.id)) {
-                            const li = document.createElement('li');
-                            li.dataset.plotId = talhao.id;
-                            li.dataset.farmName = fazenda.name; // Store for display
-                            li.textContent = `${fazenda.code} - ${fazenda.name} / ${talhao.name}`;
-                            availablePlotsList.appendChild(li);
-                        }
-                    });
-                });
-
-
-                if (blockId) {
-                    // TODO: Logic for editing an existing block
-                }
-
-                overlay.classList.add('show');
-            },
-
-            hideBlockManagerModal() {
-                App.elements.blockManagerModal.overlay.classList.remove('show');
-            },
-
             async renderSyncHistoryDetails(logId) {
                 const modal = App.elements.syncHistoryDetailModal;
                 modal.body.innerHTML = '<div class="spinner-container" style="display:flex; justify-content:center; padding: 20px;"><div class="spinner"></div></div>';
@@ -4475,109 +4393,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }
-
-                // NEW: Block manager modal listeners
-                const btnManageBlocks = document.getElementById('btnManageBlocks');
-                if (btnManageBlocks) {
-                    btnManageBlocks.addEventListener('click', () => App.ui.showBlockManagerModal());
-                }
-
-                if (App.elements.blockManagerModal.closeBtn) {
-                    App.elements.blockManagerModal.closeBtn.addEventListener('click', () => App.ui.hideBlockManagerModal());
-                }
-                if (App.elements.blockManagerModal.cancelBtn) {
-                    App.elements.blockManagerModal.cancelBtn.addEventListener('click', () => App.ui.hideBlockManagerModal());
-                }
-                 if (App.elements.blockManagerModal.saveBtn) {
-                    App.elements.blockManagerModal.saveBtn.addEventListener('click', () => App.actions.saveBlock());
-                }
-                 if (App.elements.blockManagerModal.overlay) {
-                    App.elements.blockManagerModal.overlay.addEventListener('click', e => {
-                        if (e.target === App.elements.blockManagerModal.overlay) {
-                            App.ui.hideBlockManagerModal();
-                        }
-                    });
-                }
-
-                if (App.elements.monitoramentoAereo.mapBlockFilter) {
-                    App.elements.monitoramentoAereo.mapBlockFilter.addEventListener('change', (e) => App.mapModule.filterMapByBlock(e.target.value));
-                }
-
-                // NEW: Block Report Listeners
-                if (App.elements.relatorioBlocos.btnPDF) {
-                    App.elements.relatorioBlocos.btnPDF.addEventListener('click', () => App.reports.generateBlockReport('pdf'));
-                }
-                if (App.elements.relatorioBlocos.btnExcel) {
-                    App.elements.relatorioBlocos.btnExcel.addEventListener('click', () => App.reports.generateBlockReport('csv'));
-                }
-
-
-                const availablePlotsList = App.elements.blockManagerModal.availablePlotsList;
-                const blockPlotsList = App.elements.blockManagerModal.blockPlotsList;
-
-                if (availablePlotsList && blockPlotsList) {
-                    new Sortable(availablePlotsList, {
-                        group: 'shared',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost'
-                    });
-
-                    new Sortable(blockPlotsList, {
-                        group: 'shared',
-                        animation: 150,
-                        ghostClass: 'sortable-ghost'
-                    });
-                }
             }
         },
         
         actions: {
-            async saveBlock() {
-                const {
-                    blockNameInput,
-                    editingBlockId,
-                    blockPlotsList
-                } = App.elements.blockManagerModal;
-
-                const blockName = blockNameInput.value.trim();
-                const editingId = editingBlockId.value;
-                const plotIds = Array.from(blockPlotsList.querySelectorAll('li')).map(li => parseInt(li.dataset.plotId));
-
-                if (!blockName) {
-                    App.ui.showAlert("O nome do bloco é obrigatório.", "error");
-                    return;
-                }
-                if (plotIds.length === 0) {
-                    App.ui.showAlert("Adicione pelo menos um talhão ao bloco.", "error");
-                    return;
-                }
-
-                const blockData = {
-                    name: blockName,
-                    plots: plotIds,
-                    companyId: App.state.currentUser.companyId
-                };
-
-                App.ui.setLoading(true, "A guardar bloco...");
-                try {
-                    if (editingId) {
-                        // Update logic
-                        await App.data.updateDocument('blocos', editingId, blockData);
-                        App.ui.showAlert("Bloco atualizado com sucesso!");
-                    } else {
-                        // Create logic
-                        await App.data.addDocument('blocos', blockData);
-                        App.ui.showAlert("Bloco criado com sucesso!");
-                    }
-                    App.ui.hideBlockManagerModal();
-                } catch (error) {
-                    console.error("Erro ao guardar bloco:", error);
-                    App.ui.showAlert("Ocorreu um erro ao guardar o bloco.", "error");
-                } finally {
-                    App.ui.setLoading(false);
-                }
-            },
-
             async viewConfigHistory() {
                 const modal = App.elements.configHistoryModal;
                 modal.body.innerHTML = '<div class="spinner-container" style="display:flex; justify-content:center; padding: 20px;"><div class="spinner"></div></div>';
@@ -8082,7 +7901,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         this.watchUserPosition();
                         this.loadShapesOnMap();
                         this.loadTraps();
-                        this.populateBlockFilter();
                     });
 
                 } catch (e) {
@@ -8234,20 +8052,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
                     // Normaliza as propriedades para garantir que os rótulos funcionem
+                    let featureIdCounter = 0;
                     geojson.features.forEach(feature => {
+                        feature.id = featureIdCounter++; // **HOTFIX** Adiciona um ID numérico único
                         const fundo = this._findProp(feature, ['FUNDO_AGR', 'FUNDO_AGRI', 'FUNDOAGRICOLA']);
-                        const talhaoName = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
+                        const talhao = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
                         feature.properties.AGV_FUNDO = String(fundo).trim();
-                        feature.properties.AGV_TALHAO = String(talhaoName).trim();
-
-                        // NEW: Add a unique plot ID for filtering
-                        const farm = App.state.fazendas.find(f => f.code === feature.properties.AGV_FUNDO);
-                        const talhao = farm?.talhoes.find(t => t.name.toUpperCase() === feature.properties.AGV_TALHAO.toUpperCase());
-                        if (talhao) {
-                            feature.properties.AGV_PLOT_ID = talhao.id;
-                        } else {
-                            feature.properties.AGV_PLOT_ID = null; // Mark as null if not found
-                        }
+                        feature.properties.AGV_TALHAO = String(talhao).trim();
                     });
 
 
@@ -8292,20 +8103,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         // Normaliza as propriedades também para o cache offline
+                        let featureIdCounter = 0;
                         geojson.features.forEach(feature => {
+                            feature.id = featureIdCounter++; // **HOTFIX** Adiciona um ID numérico único
                             const fundo = this._findProp(feature, ['FUNDO_AGR', 'FUNDO_AGRI', 'FUNDOAGRICOLA']);
-                            const talhaoName = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
+                            const talhao = this._findProp(feature, ['CD_TALHAO', 'TALHAO', 'COD_TALHAO', 'NAME']);
                             feature.properties.AGV_FUNDO = String(fundo).trim();
-                            feature.properties.AGV_TALHAO = String(talhaoName).trim();
-
-                            // NEW: Add a unique plot ID for filtering
-                            const farm = App.state.fazendas.find(f => f.code === feature.properties.AGV_FUNDO);
-                            const talhao = farm?.talhoes.find(t => t.name.toUpperCase() === feature.properties.AGV_TALHAO.toUpperCase());
-                            if (talhao) {
-                                feature.properties.AGV_PLOT_ID = talhao.id;
-                            } else {
-                                feature.properties.AGV_PLOT_ID = null; // Mark as null if not found
-                            }
+                            feature.properties.AGV_TALHAO = String(talhao).trim();
                         });
 
                         App.state.geoJsonData = geojson;
@@ -8340,7 +8144,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     map.addSource(sourceId, {
                         type: 'geojson',
                         data: App.state.geoJsonData,
-                        promoteId: 'AGV_FUNDO' // Use o código da fazenda como ID da feature
+                        generateId: true // Important for feature state
                     });
                 }
 
@@ -8357,7 +8161,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 ['boolean', ['feature-state', 'selected'], false], themeColors.primary,
                                 ['boolean', ['feature-state', 'hover'], false], '#607D8B', // Lighter grey for hover
                                 ['boolean', ['feature-state', 'risk'], false], '#d32f2f', // Red for risk
-                                '#333333'
+                                '#1C1C1C'
                             ],
                             'fill-opacity': [
                                 'case',
@@ -9233,19 +9037,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         ['boolean', ['feature-state', 'selected'], false], themeColors.primary,
                         ['boolean', ['feature-state', 'hover'], false], '#607D8B', // Cinza claro para hover
                         ['boolean', ['feature-state', 'risk'], false], '#d32f2f', // Vermelho para risco
-                        '#333333' // Cinza escuro padrão
+                        '#1C1C1C' // Cinza escuro padrão
                     ]);
                     map.setPaintProperty('talhoes-layer', 'fill-opacity', [
                         'case',
                         ['boolean', ['feature-state', 'selected'], false], 0.8,
                         ['boolean', ['feature-state', 'hover'], false], 0.7,
                         ['boolean', ['feature-state', 'risk'], false], 0.6,
-                        0.7 // Opacidade padrão
+                        0.5 // Opacidade padrão
                     ]);
                     map.setPaintProperty('talhoes-border-layer', 'line-opacity', 0.9);
 
                     // Garante que todos os rótulos sejam exibidos ao desativar a visualização de risco
-                    map.setPaintProperty('talhoes-labels', 'text-opacity', 1);
+                    map.setFilter('talhoes-labels', null);
                     this.loadTraps();
                     console.log("Risk view desativada. Revertendo para a visualização padrão.");
                     console.log("--- [END] calculateAndApplyRiskView ---");
@@ -9353,33 +9157,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     ]);
 
                     const allSourceFeatures = map.querySourceFeatures('talhoes-source');
-                    const featureIdsToHighlight = [];
-
-                    allSourceFeatures.forEach(feature => {
-                        const farmCode = feature.properties.AGV_FUNDO;
-                        if (farmsInRisk.has(parseInt(String(farmCode).trim(), 10))) {
-                            const featureId = feature.id;
-                            map.setFeatureState({ source: 'talhoes-source', id: featureId }, { risk: true });
-                            featureIdsToHighlight.push(featureId);
-                        } else {
-                            // Garante que o estado 'risk' é definido como falso para todas as outras fazendas
-                            map.setFeatureState({ source: 'talhoes-source', id: feature.id }, { risk: false });
-                        }
+                    const featuresToHighlight = allSourceFeatures.filter(feature => {
+                        const farmCode = this._findProp(feature, ['FUNDO_AGR']);
+                        return farmsInRisk.has(parseInt(String(farmCode).trim(), 10));
                     });
 
-                    if (featureIdsToHighlight.length > 0) {
-                        map.riskFarmFeatureIds = featureIdsToHighlight;
+                    if (featuresToHighlight.length > 0) {
+                        const featureIds = featuresToHighlight.map(f => f.id);
+                        featureIds.forEach(id => {
+                            map.setFeatureState({ source: 'talhoes-source', id: id }, { risk: true });
+                        });
+                        map.riskFarmFeatureIds = featureIds;
 
                         // Get the string representations of the farm codes in risk
                         const farmCodesInRiskAsStrings = Array.from(farmsInRisk, code => String(code));
 
-                        // Use text-opacity to hide labels for non-risk farms
-                        map.setPaintProperty('talhoes-labels', 'text-opacity', [
-                            'case',
-                            ['in', ['get', 'AGV_FUNDO'], ['literal', farmCodesInRiskAsStrings]],
-                            1, // Show label
-                            0  // Hide label
-                        ]);
+                        // Filter labels to show only those for farms in risk
+                        const labelFilter = ['in', ['get', 'AGV_FUNDO'], ['literal', farmCodesInRiskAsStrings]];
+                        map.setFilter('talhoes-labels', labelFilter);
 
                         App.ui.showAlert(`${farmsInRisk.size} fazenda(s) em risco foram destacadas.`, 'info');
                     } else {
@@ -9387,20 +9182,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.warn("[RISK_DEBUG] Risk farms calculated, but no corresponding features found on the map.");
                         App.ui.showAlert('Nenhuma fazenda em risco foi identificada no mapa.', 'success');
                          // Revert to default view to avoid a blank map
-                        map.setPaintProperty('talhoes-layer', 'fill-color', '#333333');
-                        map.setPaintProperty('talhoes-layer', 'fill-opacity', 0.7);
+                        map.setPaintProperty('talhoes-layer', 'fill-color', App.ui._getThemeColors().primary);
+                        map.setPaintProperty('talhoes-layer', 'fill-opacity', 0.5);
                         map.setPaintProperty('talhoes-border-layer', 'line-opacity', 0.9);
-                        map.setPaintProperty('talhoes-labels', 'text-opacity', 1); // Show all labels
+                        map.setFilter('talhoes-labels', null); // Show all labels
                     }
 
                 } else {
                     console.log("[RISK_DEBUG] No risk farms found. Displaying all plots normally.");
                     App.ui.showAlert('Nenhuma fazenda em risco foi identificada no período.', 'success');
                     // Ensure the map doesn't stay blank by reverting to the default view
-                    map.setPaintProperty('talhoes-layer', 'fill-color', '#333333');
+                    map.setPaintProperty('talhoes-layer', 'fill-color', '#1C1C1C');
                     map.setPaintProperty('talhoes-layer', 'fill-opacity', 0.7);
                     map.setPaintProperty('talhoes-border-layer', 'line-opacity', 0.9);
-                    map.setPaintProperty('talhoes-labels', 'text-opacity', 1); // Show all labels
+                    map.setFilter('talhoes-labels', null); // Show all labels
                 }
 
                 console.log("--- [END] calculateAndApplyRiskView ---");
@@ -9523,56 +9318,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     });
                 }, 8000);
-            },
-
-            populateBlockFilter() {
-                const select = App.elements.monitoramentoAereo.mapBlockFilter;
-                if (!select) return;
-
-                select.innerHTML = '<option value="all">Todos os Blocos</option>';
-                if (App.state.blocos.length === 0) {
-                    select.innerHTML += '<option value="" disabled>Nenhum bloco criado</option>';
-                } else {
-                    App.state.blocos.sort((a, b) => a.name.localeCompare(b.name)).forEach(bloco => {
-                        select.innerHTML += `<option value="${bloco.id}">${bloco.name}</option>`;
-                    });
-                }
-            },
-
-            filterMapByBlock(blockId) {
-                const map = App.state.mapboxMap;
-                if (!map || !map.getSource('talhoes-source')) return;
-
-                const layers = ['talhoes-layer', 'talhoes-border-layer', 'talhoes-labels'];
-
-                if (!blockId || blockId === 'all') {
-                    layers.forEach(layerId => {
-                        if (map.getLayer(layerId)) {
-                            map.setFilter(layerId, null);
-                        }
-                    });
-                    return;
-                }
-
-                const selectedBlock = App.state.blocos.find(b => b.id === blockId);
-                if (!selectedBlock || !selectedBlock.plots || selectedBlock.plots.length === 0) {
-                    // Filter to show nothing if block is empty or not found
-                    layers.forEach(layerId => {
-                        if (map.getLayer(layerId)) {
-                            map.setFilter(layerId, ['in', ['get', 'AGV_PLOT_ID'], '']);
-                        }
-                    });
-                    return;
-                }
-
-                const plotIdsInBlock = selectedBlock.plots;
-                const filter = ['in', ['get', 'AGV_PLOT_ID'], ['literal', plotIdsInBlock]];
-
-                layers.forEach(layerId => {
-                    if (map.getLayer(layerId)) {
-                        map.setFilter(layerId, filter);
-                    }
-                });
             },
         },
 
