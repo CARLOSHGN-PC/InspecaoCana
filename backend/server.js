@@ -3205,6 +3205,289 @@ try {
     app.use((req, res) => res.status(500).send('Erro de configuração do servidor.'));
 }
 
+// --- [NOVO] ROTAS PARA GERENCIAMENTO DE BLOCOS ---
+
+// Criar um novo bloco
+app.post('/api/blocks', async (req, res) => {
+    const { name, companyId, plots } = req.body;
+    if (!name || !companyId) {
+        return res.status(400).json({ message: 'O nome do bloco e o ID da empresa são obrigatórios.' });
+    }
+    try {
+        const newBlockRef = db.collection('blocks').doc();
+        await newBlockRef.set({
+            id: newBlockRef.id,
+            name,
+            companyId,
+            plots: plots || [], // plots is an array of {farmCode, plotId}
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        res.status(201).json({ message: 'Bloco criado com sucesso!', id: newBlockRef.id });
+    } catch (error) {
+        console.error("Erro ao criar bloco:", error);
+        res.status(500).json({ message: 'Erro no servidor ao criar bloco.' });
+    }
+});
+
+// Obter todos os blocos de uma empresa
+app.get('/api/blocks', async (req, res) => {
+    const { companyId } = req.query;
+    if (!companyId) {
+        return res.status(400).json({ message: 'O ID da empresa é obrigatório.' });
+    }
+    try {
+        const snapshot = await db.collection('blocks').where('companyId', '==', companyId).orderBy('name').get();
+        if (snapshot.empty) {
+            return res.status(200).json([]);
+        }
+        const blocks = [];
+        snapshot.forEach(doc => blocks.push(doc.data()));
+        res.status(200).json(blocks);
+    } catch (error) {
+        console.error("Erro ao obter blocos:", error);
+        res.status(500).json({ message: 'Erro no servidor ao obter blocos.' });
+    }
+});
+
+// Obter um bloco específico
+app.get('/api/blocks/:id', async (req, res) => {
+    const { id } = req.params;
+    const { companyId } = req.query;
+    if (!companyId) {
+        return res.status(400).json({ message: 'O ID da empresa é obrigatório.' });
+    }
+    try {
+        const doc = await db.collection('blocks').doc(id).get();
+        if (!doc.exists || doc.data().companyId !== companyId) {
+            return res.status(404).json({ message: 'Bloco não encontrado.' });
+        }
+        res.status(200).json(doc.data());
+    } catch (error) {
+        console.error("Erro ao obter bloco:", error);
+        res.status(500).json({ message: 'Erro no servidor ao obter bloco.' });
+    }
+});
+
+// Atualizar um bloco (nome e/ou talhões)
+app.put('/api/blocks/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, plots, companyId } = req.body;
+    if (!companyId) {
+        return res.status(400).json({ message: 'O ID da empresa é obrigatório.' });
+    }
+    try {
+        const blockRef = db.collection('blocks').doc(id);
+        const doc = await blockRef.get();
+
+        if (!doc.exists || doc.data().companyId !== companyId) {
+            return res.status(404).json({ message: 'Bloco não encontrado.' });
+        }
+
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (plots) updateData.plots = plots; // Substitui a lista de talhões inteira
+        updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+        await blockRef.update(updateData);
+        res.status(200).json({ message: 'Bloco atualizado com sucesso.' });
+    } catch (error) {
+        console.error("Erro ao atualizar bloco:", error);
+        res.status(500).json({ message: 'Erro no servidor ao atualizar bloco.' });
+    }
+});
+
+// Deletar um bloco
+app.delete('/api/blocks/:id', async (req, res) => {
+    const { id } = req.params;
+    const { companyId } = req.body; // companyId no body para segurança
+     if (!companyId) {
+        return res.status(400).json({ message: 'O ID da empresa é obrigatório.' });
+    }
+    try {
+        const blockRef = db.collection('blocks').doc(id);
+        const doc = await blockRef.get();
+
+        if (!doc.exists || doc.data().companyId !== companyId) {
+            return res.status(404).json({ message: 'Bloco não encontrado.' });
+        }
+
+        await blockRef.delete();
+        res.status(200).json({ message: 'Bloco deletado com sucesso.' });
+    } catch (error) {
+        console.error("Erro ao deletar bloco:", error);
+        res.status(500).json({ message: 'Erro no servidor ao deletar bloco.' });
+    }
+});
+
+// --- [NOVO] ROTA PARA RELATÓRIO DE BLOCOS ---
+app.get('/reports/block/pdf', async (req, res) => {
+    const doc = new PDFDocument({ margin: 30, size: 'A4', layout: 'landscape', bufferPages: true });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=relatorio_bloco.pdf`);
+    doc.pipe(res);
+
+    try {
+        const { blockId, generatedBy, companyId } = req.query;
+        if (!companyId || !blockId) {
+            throw new Error('O ID da empresa e do bloco são obrigatórios.');
+        }
+
+        // 1. Buscar o bloco
+        const blockDoc = await db.collection('blocks').doc(blockId).get();
+        if (!blockDoc.exists || blockDoc.data().companyId !== companyId) {
+            throw new Error('Bloco não encontrado ou não pertence a esta empresa.');
+        }
+        const block = blockDoc.data();
+        const title = `Relatório de Bloco - ${block.name}`;
+
+        await generatePdfHeader(doc, title, companyId);
+
+        if (!block.plots || block.plots.length === 0) {
+            doc.text('Este bloco não possui talhões associados.');
+            generatePdfFooter(doc, generatedBy);
+            return doc.end();
+        }
+
+        // 2. Buscar os dados das fazendas e talhões do bloco
+        const farmCodesInBlock = [...new Set(block.plots.map(p => p.farmCode))];
+        const farmsSnapshot = await db.collection('fazendas').where('companyId', '==', companyId).where('code', 'in', farmCodesInBlock).get();
+        const farmsData = {};
+        const farmColors = {};
+        const colorPalette = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075'];
+        let colorIndex = 0;
+
+        farmsSnapshot.forEach(doc => {
+            const farm = doc.data();
+            farmsData[farm.code] = farm;
+            if (!farmColors[farm.code]) {
+                farmColors[farm.code] = colorPalette[colorIndex % colorPalette.length];
+                colorIndex++;
+            }
+        });
+
+        const geojsonData = await getShapefileData(companyId);
+        if (!geojsonData) {
+            doc.text('Shapefile da empresa não encontrado. Não é possível gerar o mapa.');
+            generatePdfFooter(doc, generatedBy);
+            return doc.end();
+        }
+
+        const plotIdsInBlock = block.plots.map(p => p.plotId);
+        const blockFeatures = geojsonData.features.filter(f => {
+             const plotId = findShapefileProp(f.properties, ['ID', 'ID_TALHAO', 'COD_TALHAO']);
+             return plotIdsInBlock.includes(String(plotId));
+        });
+
+
+        // --- Coluna da Esquerda: Mapa e Legenda ---
+        const leftColumnWidth = doc.page.width * 0.60;
+        const mapAreaX = doc.page.margins.left;
+        const mapAreaY = doc.y;
+        const mapWidth = leftColumnWidth - doc.page.margins.left;
+        const mapHeight = doc.page.height - doc.y - doc.page.margins.bottom - 60; // Espaço para a legenda
+
+        if (blockFeatures.length > 0) {
+            const allCoords = blockFeatures.flatMap(f => f.geometry.type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates.flatMap(p => p[0]));
+            const bbox = {
+                minX: Math.min(...allCoords.map(c => c[0])), maxX: Math.max(...allCoords.map(c => c[0])),
+                minY: Math.min(...allCoords.map(c => c[1])), maxY: Math.max(...allCoords.map(c => c[1])),
+            };
+            const scaleX = mapWidth / (bbox.maxX - bbox.minX);
+            const scaleY = mapHeight / (bbox.maxY - bbox.minY);
+            const scale = Math.min(scaleX, scaleY) * 0.95;
+            const offsetX = mapAreaX + (mapWidth - (bbox.maxX - bbox.minX) * scale) / 2;
+            const offsetY = mapAreaY + (mapHeight - (bbox.maxY - bbox.minY) * scale) / 2;
+            const transformCoord = (coord) => [ (coord[0] - bbox.minX) * scale + offsetX, (bbox.maxY - coord[1]) * scale + offsetY ];
+
+            doc.save();
+            doc.lineWidth(0.5).strokeColor('#000');
+            blockFeatures.forEach(feature => {
+                const farmCode = findShapefileProp(feature.properties, ['CD_FAZENDA', 'COD_FAZENDA']);
+                const fillColor = farmColors[farmCode] || '#d3d3d3'; // Cor padrão cinza
+                doc.fillColor(fillColor);
+
+                const polygons = feature.geometry.type === 'Polygon' ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+                polygons.forEach(polygon => {
+                    const path = polygon[0];
+                    if(path && path.length > 0){
+                        const firstPoint = transformCoord(path[0]);
+                        doc.moveTo(firstPoint[0], firstPoint[1]);
+                        for (let i = 1; i < path.length; i++) doc.lineTo(...transformCoord(path[i]));
+                        doc.fillAndStroke();
+                    }
+                });
+            });
+            doc.restore();
+        } else {
+            doc.fontSize(10).text('Nenhuma geometria encontrada para os talhões deste bloco.', mapAreaX + 10, mapAreaY + 10);
+        }
+
+        // Legenda do Mapa
+        let legendY = mapAreaY + mapHeight + 15;
+        doc.fontSize(10).font('Helvetica-Bold').text('Legenda:', mapAreaX, legendY);
+        legendY += 15;
+        Object.keys(farmColors).forEach(code => {
+            const farmName = farmsData[code]?.name || 'Desconhecida';
+            doc.rect(mapAreaX, legendY, 10, 10).fill(farmColors[code]);
+            doc.fontSize(8).font('Helvetica').text(`${code} - ${farmName}`, mapAreaX + 15, legendY + 2);
+            legendY += 15;
+        });
+
+
+        // --- Coluna da Direita: Tabela de Talhões ---
+        const rightColumnX = leftColumnWidth + 15;
+        const tableWidth = doc.page.width - leftColumnWidth - doc.page.margins.right - 15;
+        let tableY = mapAreaY;
+
+        const headers = ['Fazenda', 'Talhão', 'Área (ha)', 'Variedade'];
+        const columnWidths = [tableWidth * 0.35, tableWidth * 0.25, tableWidth * 0.20, tableWidth * 0.20];
+        const rowHeight = 18;
+
+        tableY = drawRow(doc, headers, tableY, true, false, columnWidths, 5, rowHeight, headers.map(h => ({id: h})));
+
+        let totalArea = 0;
+        const sortedFarms = Object.values(farmsData).sort((a,b) => a.code - b.code);
+
+        for(const farm of sortedFarms) {
+            const plotsInFarm = block.plots.filter(p => p.farmCode === farm.code);
+            const talhoesInFarm = farm.talhoes.filter(t => plotsInFarm.some(p => p.plotId === t.id));
+
+            for(const talhao of talhoesInFarm) {
+                const rowData = [
+                    `${farm.code} - ${farm.name}`,
+                    talhao.name,
+                    formatNumber(talhao.area || 0),
+                    talhao.variedade || 'N/A'
+                ];
+                tableY = await checkPageBreak(doc, tableY, title, 40);
+                tableY = drawRow(doc, rowData, tableY, false, false, columnWidths, 5, rowHeight, headers.map(h => ({id: h})));
+                totalArea += talhao.area || 0;
+            }
+        }
+
+        const totalRow = ['Total', '', formatNumber(totalArea), ''];
+        drawRow(doc, totalRow, tableY, false, true, columnWidths, 5, rowHeight, headers.map(h => ({id: h})));
+
+
+        generatePdfFooter(doc, generatedBy);
+        doc.end();
+
+    } catch (error) {
+        console.error("Erro ao gerar PDF de Bloco:", error);
+        if (!res.headersSent) {
+            // Se nenhum header foi enviado, podemos tentar enviar um erro 500
+            // Se não, o melhor a fazer é apenas fechar o stream do doc.
+            try {
+                res.status(500).send(`Erro ao gerar relatório: ${error.message}`);
+            } catch(e) {
+                 // Ignora erros se os headers já foram enviados
+            }
+        }
+        doc.end();
+    }
+});
+
+
 app.listen(port, () => {
     console.log(`Servidor de relatórios rodando na porta ${port}`);
 });

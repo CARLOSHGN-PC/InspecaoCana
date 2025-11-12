@@ -7,6 +7,7 @@
     "@capacitor/network": "^7.0.2",
     "@capacitor/push-notifications": "^7.0.3",
     "@capacitor/status-bar": "^7.0.3",
-    "@playwright/test": "^1.56.1"
+    "@playwright/test": "^1.56.1",
+    "playwright": "^1.56.1"
   }
 }
