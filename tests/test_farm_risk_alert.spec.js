@@ -2,7 +2,6 @@ const { test, expect } = require('@playwright/test');
 
 test.describe('Farm Risk Alert Feature', () => {
     test('should highlight at-risk farms, hide others, and show risk percentage on click', async ({ page }) => {
-        test.setTimeout(60000); // Aumenta o timeout para 60 segundos
         await page.goto('http://localhost:8000/index.html');
 
         // 1. Wait for the app to be ready
