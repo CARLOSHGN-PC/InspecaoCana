@@ -61,13 +61,13 @@ test.describe('Farm Risk Alert Feature', () => {
                 features: [
                     {
                         type: 'Feature',
-                        id: 1, // Mapbox generates numeric IDs
+                        id: atRiskFarmCode,
                         geometry: { type: 'Polygon', coordinates: [[[-48, -21], [-48, -21.1], [-48.1, -21.1], [-48.1, -21], [-48, -21]]] },
                         properties: { FUNDO_AGR: atRiskFarmCode, NM_IMOVEL: 'FARM AT RISK' }
                     },
                     {
                         type: 'Feature',
-                        id: 2,
+                        id: notAtRiskFarmCode,
                         geometry: { type: 'Polygon', coordinates: [[[-49, -22], [-49, -22.1], [-49.1, -22.1], [-49.1, -22], [-49, -22]]] },
                         properties: { FUNDO_AGR: notAtRiskFarmCode, NM_IMOVEL: 'FARM NOT AT RISK' }
                     }
@@ -97,12 +97,15 @@ test.describe('Farm Risk Alert Feature', () => {
         await page.waitForFunction(() => window.App.state.riskViewActive === true);
         await page.waitForTimeout(500); // Give it a moment to apply styles
 
-        // 6. Verify visual state of the map features
-        const atRiskFeatureState = await page.evaluate(() => window.App.state.mapboxMap.getFeatureState({ source: 'talhoes-source', id: 1 }));
-        expect(atRiskFeatureState.risk).toBe(true);
+        // 6. Verify visual state of the map features by polling
+        await expect(async () => {
+            const atRiskFeatureState = await page.evaluate((farmCode) => window.App.state.mapboxMap.getFeatureState({ source: 'talhoes-source', id: farmCode }), atRiskFarmCode);
+            expect(atRiskFeatureState).not.toBeNull();
+            expect(atRiskFeatureState.risk).toBe(true);
+        }).toPass({ timeout: 5000 });
 
-        const notAtRiskFeatureState = await page.evaluate(() => window.App.state.mapboxMap.getFeatureState({ source: 'talhoes-source', id: 2 }));
-        expect(notAtRiskFeatureState.risk).toBe(undefined);
+        const notAtRiskFeatureState = await page.evaluate((farmCode) => window.App.state.mapboxMap.getFeatureState({ source: 'talhoes-source', id: farmCode }), notAtRiskFarmCode);
+        expect(notAtRiskFeatureState.risk).toBe(false);
 
         // Verify paint properties for isolation view
         const fillOpacity = await page.evaluate(() => window.App.state.mapboxMap.getPaintProperty('talhoes-layer', 'fill-opacity'));
@@ -111,6 +114,14 @@ test.describe('Farm Risk Alert Feature', () => {
 
         const lineOpacity = await page.evaluate(() => window.App.state.mapboxMap.getPaintProperty('talhoes-border-layer', 'line-opacity'));
         expect(lineOpacity[1][1][1]).toEqual('risk');
+
+        // Verify new default color
+        const fillColor = await page.evaluate(() => window.App.state.mapboxMap.getPaintProperty('talhoes-layer', 'fill-color'));
+        expect(fillColor).toEqual('#333333');
+
+        // Verify label opacity
+        const textOpacity = await page.evaluate(() => window.App.state.mapboxMap.getPaintProperty('talhoes-labels', 'text-opacity'));
+        expect(textOpacity[1][1][1]).toEqual('risk'); // ['case', ['boolean', ['feature-state', 'risk'], false], 1, 0]
 
         // 7. Simulate click on the at-risk farm and verify the popup
         await page.evaluate(() => {
