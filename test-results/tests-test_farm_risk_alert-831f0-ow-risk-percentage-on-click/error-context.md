@@ -1,0 +1,80 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]: 
+    - text: Nenhuma fazenda em risco foi identificada no mapa.
+  - text:   
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - button "Abrir menu" [ref=e6] [cursor=pointer]
+      - heading " AgroVetor" [level=1] [ref=e11] [cursor=pointer]:
+        - generic [ref=e12]: 
+        - text: AgroVetor
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - button "Notificações" [ref=e15] [cursor=pointer]:
+            - generic [ref=e16]: 
+            - generic: "0"
+          - generic:
+            - generic:
+              - generic: Notificações
+              - button "Limpar"
+            - generic:
+              - generic: 
+              - paragraph: Nenhuma notificação nova.
+        - generic [ref=e17]:
+          - button "Menu do Utilizador" [ref=e18] [cursor=pointer]:
+            - generic [ref=e19]: 
+          - menu:
+            - generic:
+              - paragraph:
+                - strong: "Conectado como:"
+              - paragraph: Test User
+            - generic:
+              - generic: 
+              - text: 18/11/2025, 11:01
+            - separator
+            - generic:
+              - paragraph: Tema
+              - generic:
+                - button "Verde (Padrão)"
+                - button "Azul"
+                - button "Escuro"
+            - separator
+            - text: 
+            - menuitem " Sincronizar Manualmente":
+              - generic: 
+              - text: Sincronizar Manualmente
+            - menuitem " Alterar Senha":
+              - generic: 
+              - text: Alterar Senha
+            - menuitem " Sair":
+              - generic: 
+              - text: Sair
+    - navigation "Menu Principal" [ref=e20]:
+      - button " Monitoramento Aéreo" [ref=e22] [cursor=pointer]:
+        - generic [ref=e23]: 
+        - generic [ref=e24]: Monitoramento Aéreo
+    - main [ref=e25]:                                       $                              +  *   * * *  * *  +        * * * * *    * * * * * * *   * *          *                    * * *    * *   $ * * * * * * *   * * *  +   * * *   * *         * *    * *        *      * *       * * * *    *  * *     * * * *            * *                                * *         * * * * *  +    * *    * * * * * * * *   * *  
+    - generic [ref=e27]:
+      - generic [ref=e28]:
+        - region "Map" [ref=e29]
+        - link "Mapbox homepage" [ref=e31] [cursor=pointer]:
+          - /url: https://www.mapbox.com/
+      - generic [ref=e32]:
+        - textbox "Pesquisar fazenda..."
+        - button "" [ref=e33] [cursor=pointer]:
+          - generic [ref=e34]: 
+      - generic [ref=e35]:
+        - button "" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37]: 
+        - button "" [ref=e38] [cursor=pointer]:
+          - generic [ref=e39]: 
+        - button "" [active] [ref=e40] [cursor=pointer]:
+          - generic [ref=e41]: 
+        - button "+" [ref=e42] [cursor=pointer]:
+          - generic [ref=e43]: +
+    - text:    *      * * * *
+```
